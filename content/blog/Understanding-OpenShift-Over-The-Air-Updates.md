@@ -1,7 +1,8 @@
 ---
 title: How do OpenShift Over The Air Updates Work?
+banner: /images/the-face-of-a-computer-operator-from-the-2134th-communications-squadron-is-2ca9c9.jpg
+date: 2021-03-09
 layout: post
-banner: images/the-face-of-a-computer-operator-from-the-2134th-communications-squadron-is-2ca9c9.jpg
 tags:
  - openshift
  - OCP4
@@ -12,7 +13,7 @@ OpenShift 4 extends the [operator pattern introduced by CoreOS][9], and enables 
 
 # Operators All the Way Down
 
-[![Computer Operator](/images/the-face-of-a-computer-operator-from-the-2134th-communications-squadron-is-2ca9c9.jpg)](https://nara.getarchive.net/media/the-face-of-a-computer-operator-from-the-2134th-communications-squadron-is-2ca9c9)
+[![Computer Operator](/images/the-face-of-a-computer-operator-from-the-2134th-communications-squadron-is-2ca9c9.jpg)](https://nara.getarchive.net/media/the-face-of-a-computer-operator-from-the-2134th-communications-squadron-is-2ca9c9){: .align-center}
 
 **What is an "Operator"?**
 
@@ -23,10 +24,11 @@ OpenShift 4 extends the [operator pattern introduced by CoreOS][9], and enables 
 > [A Kubernetes application is][1] an application that is both deployed on Kubernetes and managed using the Kubernetes APIs.
 
 By creating APIs and [Custom Resource Definitions](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) for all aspects of a cluster, OpenShift essentially turns the cluster into a "kubernetes application".
+{:style="clear center"}
 
 For example here is a list of machine configuration related CRDs now available for management by Kubernetes.
 
-```bash
+```shell
 $ oc api-resources --api-group=machineconfiguration.openshift.io
 NAME                      SHORTNAMES   APIGROUP                            NAMESPACED   KIND
 containerruntimeconfigs   ctrcfg       machineconfiguration.openshift.io   false        ContainerRuntimeConfig
@@ -63,7 +65,7 @@ There is a [set of operators][6] that do not require manual installation. These 
 
 These are called exposed by a the [ClusterOperator][12] custom resource. You can see them with the `oc get clusteroperators` command.
 
-```shell 
+```shell
 $ oc get clusteroperators
 NAME                                       VERSION   AVAILABLE   PROGRESSING   DEGRADED   SINCE
 authentication                             4.6.12    True        False         False      5m9s
@@ -101,7 +103,7 @@ storage                                    4.6.12    True        False         F
 By examining these cluster operators with `oc describe` you can deduce a sense of their purpose and context. 
 For example you can see that the "authentication" clusteroperator has a relation to the namespace "openshift-authentication". This would be a logical place to look for further details such as events and pod logs.
 
-```bash
+```shell
 $ oc describe clusteroperator/authentication
 ```
 ```yaml
@@ -194,7 +196,7 @@ More detail may be found in
 
 The source of our update graph can be seen in ClusterVersion resource nameed "version". An alternative command would be `oc describe clusterversion`. Notice this cluster is tracking the _stable-4.6_ channel and retrieving the graph from `https://api.openshift.com/api/upgrades_info/v1/graph`.
 
-```bash
+```shell
 $ oc get ClusterVersion/version -o jsonpath="{.spec}" | jq
 ```
 ```json
@@ -212,7 +214,7 @@ $ oc get ClusterVersion/version -o jsonpath="{.spec}" | jq
 The `oc adm upgrade` command will use the information from that graph and present any suitable updates.
 [Red Hat OpenShift Container Platform Update Graph](https://access.redhat.com/labs/ocpupgradegraph/update_channel) generates a dynamic graphical representation of the update options.
 
-{% highlight shell %}
+```shell
 $ oc adm upgrade
 Cluster version is 4.6.12
 
@@ -221,13 +223,13 @@ Updates:
 VERSION IMAGE
 4.6.13  quay.io/openshift-release-dev/ocp-release@sha256:8a9e40df2a19db4cc51dc8624d54163bef6e88b7d88cc0f577652ba25466e338
 4.6.15  quay.io/openshift-release-dev/ocp-release@sha256:b70f550e3fa94af2f7d60a3437ec0275194db36f2dc49991da2336fe21e2824c
-{% endhighlight %}
+```
 
 ## Examining the Content of a Release Payload
 
 We can get some info about a release, including the list of container images providing cluster operators, with the `oc adm release info` command.
 
-{% highlight shell %}
+```shell
 $ oc adm release info \
 quay.io/openshift-release-dev/ocp-release@sha256:8a9e40df2a19db4cc51dc8624d54163bef6e88b7d88cc0f577652ba25466e338
 Name:      4.6.13
@@ -264,7 +266,7 @@ Images:
   cloud-credential-operator                      sha256:e490c84ffcfd6a07589eeb56600e04afc2e58edb3459643bd569be50e66e6061
   cluster-authentication-operator                sha256:baa7275273e6a4e2adb75aced5485c880368d9260df03f832a2b0a4c6cb194e3
   ...snip...
-{% endhighlight %}
+```
 
 Pro Tip: `oc adm release info quay.io/openshift-release-dev/ocp-release:4.6.13-x86_64` would have also worked.
 
@@ -292,7 +294,7 @@ As shown above, the OpenShift release image contains a reference to a [specific 
 RHEL CoreOS like RHEL Atomic Host uses [libostree][18] to apply operating system updates in a transactional manner. During an update the MCD downloads the container image provided in the `osImageURL` attribute of the Ignition config. This is image essentially a wrapper around an OSTree commit which is extracted and written to 
 `/ostree/deploy/rhcos/deploy/<hash>`. The boot configuration is then updated to point to the new OSTree where it will be used upon reboot.
 
-{%highlight shell %}
+```shell
 sh-4.4# rpm-ostree status
 State: idle
 AutomaticUpdates: disabled
@@ -317,13 +319,13 @@ Deployments:
                             |- rhel8-baseos (2020-11-23T17:53:53Z)
                             `- rhel8-appstream (2020-11-30T10:18:29Z)
                  StateRoot: rhcos
-{% endhighlight %}
+```
 
 #### Machine Config Daemon Troubleshooting
 
 The MCD is of course running in a pod, so you can spy on its logs on each node and observe its actions or check for problems. For example, while unusual (I've seen the following once), it adds some behind the scenes context. After finding a node as NotReady a problem with the boot config was exposed in the logs.
 
-{%highlight shell %}
+```shell
 oc project openshift-machine-config-operator
 for POD in `oc get pod -o name -l k8s-app=machine-config-daemon`; do
   echo ----
@@ -341,11 +343,11 @@ machine-config-daemon-nn5p8   2/2     Running   0          15m   192.168.4.63   
 E0209 18:23:14.965590  116436 writer.go:135] Marking Degraded due to: unexpected on-disk state validating against \
  rendered-master-ff38f849e21009792e7db36fe2c27ef9: expected target osImageURL "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:6069ffcc5dcd227c867a86970f3d2076221081a81b6c92fbecfd044ef160161e",\
  have "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:4c5b83a192734ad6aa33da798f51b4b7ebe0f633ed63d53867a0c3fb73993024"
-{% endhighlight %}
+```
 
 Updating the boot config allowed the host to come back into compliance. 
 
-{%highlight shell %}
+```shell
 oc debug node/vipi-7zc6h-master-1
 sh-4.4# chroot /host
 sh-4.4# rpm-ostree status -v
@@ -353,7 +355,7 @@ sh-4.4# rpm-ostree status -v
 sh-4.4# /run/bin/machine-config-daemon pivot quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:6069ffcc5dcd227c867a86970f3d207622108
 1a81b6c92fbecfd044ef160161e
 sh-4.4# reboot
-{% endhighlight %}
+```
 
 
 Finally when the node is rebooted with the node annotations updated by the MachineConfigControllerare updated to reflect the state.
