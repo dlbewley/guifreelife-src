@@ -36,9 +36,9 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         env:
           ACTIONS_DEPLOY_KEY: ${{ secrets.GITHUB_TOKEN }}
-          EXTERNAL_REPOSITORY: dwnwrd/dwnwrd-src
+          EXTERNAL_REPOSITORY: dwnwrd/dwnwrd.github.io
           PUBLISH_BRANCH: master
           PUBLISH_DIR: ./public
         with:
-          emptyCommits: false
-          commitMessage: ${{ github.event.head_commit.message }}
+          allow_empty_commit: false
+          commit_message: ${{ github.event.head_commit.message }}
