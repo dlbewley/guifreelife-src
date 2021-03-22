@@ -1,5 +1,6 @@
 weight: 4
-name: "Consulting"
-icon: "fas fa-lightbulb"
-url: ""
-description: "Fifth abundantly made Give sixth hath. Cattle creature i be don't them behold green moved fowl Moved life us beast good yielding. Have bring."
+name: "Cloud Native"
+icon: "fas fa-dharmachakra"
+# icon: "fas fa-lightbulb"
+url: "tags/openshift/"
+description: "[OpenShift](tags/openshift), [Kubernetes](tags/kubernetes), [OpenStack](tags/openstack)"

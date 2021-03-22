@@ -1,4 +1,7 @@
-weight: 1
-title: "Multipurpose responsive theme"
-description: "<p>Business. Corporate. Agency.<br>Portfolio. Blog. E-commerce.</p>"
-image: "img/carousel/template-homepage.png"
+weight: 2
+title: "Technical Exploration"
+description: >
+  <p>
+    Deep dives into cutting edge technologies 
+  </p>
+image: "images/the-face-of-a-computer-operator-from-the-2134th-communications-squadron-is-2ca9c9.jpg"

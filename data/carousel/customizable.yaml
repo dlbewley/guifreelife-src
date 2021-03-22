@@ -1,9 +1,10 @@
 weight: 4
-title: "Easy to customize"
+title: "Tips and Tricks"
 description: >
   <ul class="list-style-none">
-    <li>7 preprepared colour variations.</li>
-    <li>Easily to change fonts</li>
+    <li>Automation</li>
+    <li>Shortcuts</li>
+    <li>Best practices</li>
   </ul>
-image: "img/banners/banner-1.jpg"
+image: "images/browser-cert-api.png"
 #image: "img/carousel/template-easy-code.png"
