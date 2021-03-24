@@ -4,7 +4,12 @@ src=/Users/dale/src/dlbewley.github.io/_posts
 img_src=/Users/dale/src/dlbewley.github.io/images
 dst=/Users/dale/src/dwnwrd-src/content/blog
 img_dst=/Users/dale/src/dwnwrd-src/static/images
+banner_dir=/Users/dale/src/dwnwrd-src/static/img/banners
 
+get_banner() {
+    qty=`ls -1 $banner_dir/banner* | wc -l`
+    banner="/img/banners/banner-$((1 + $RANDOM % $qty)).jpg"
+}
 
 for f in $src/*; do
 
@@ -14,9 +19,13 @@ for f in $src/*; do
 
     echo $dst/$new_filename
 
-    banner=`grep '\[\!' $src/$old_filename \
+    banner=`grep -E '(\[\!|\!\[)' $src/$old_filename \
         | head -1 \
         | gsed 's/^[^(]*(\([^(]*\)).*$/\1/'`
+
+    if [ -z "$banner" ]; then
+        get_banner
+    fi
 
     cp -p "$src/$old_filename" "$dst/$new_filename"
 
