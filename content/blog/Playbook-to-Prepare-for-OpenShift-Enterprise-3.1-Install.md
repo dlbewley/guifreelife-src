@@ -1,5 +1,6 @@
 ---
 title: Ansible Playbook to Prepare for OpenShift Enterprise 3.1
+banner: /img/banners/banner-6.jpg
 date: 2015-12-12
 layout: post
 tags:

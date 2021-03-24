@@ -1,5 +1,6 @@
 ---
 title: Testing Openshift Origin V3 with Ansible and Vagrant on OS X
+banner: /images/openshift-virtualbox-0.png
 date: 2015-06-28
 layout: post
 tags:

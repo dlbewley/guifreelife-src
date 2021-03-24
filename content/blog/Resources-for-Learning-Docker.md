@@ -1,5 +1,6 @@
 ---
 title: Resources for Learning About Docker
+banner: http://akamaicovers.oreilly.com/images/0636920035671/bkt.gif
 date: 2015-04-19
 layout: post
 tags:

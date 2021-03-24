@@ -1,5 +1,6 @@
 ---
 title: Tuning ext4 Creation and Mount Options for Zimbra
+banner: /img/banners/banner-11.jpg
 date: 2015-02-02
 layout: post
 tags: [ ansible, zimbra ]

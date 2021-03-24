@@ -1,5 +1,6 @@
 ---
 title: Changing the SSL Certificate for OpenShift Console
+banner: /img/banners/banner-43.jpg
 date: 2016-03-24
 layout: post
 tags:

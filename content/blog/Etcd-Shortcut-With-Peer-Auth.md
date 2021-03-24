@@ -1,5 +1,6 @@
 ---
 title: Etcdctl v2 and v3 Aliases for Peer Authenticated Commands
+banner: /img/banners/banner-39.jpg
 date: 2019-02-08
 layout: post
 tags:

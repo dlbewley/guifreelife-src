@@ -1,5 +1,6 @@
 ---
 title: OpenShift 3.6 Upgrade Metrics Fails Missing heapster-certs Secret
+banner: /img/banners/banner-11.jpg
 date: 2017-10-13
 layout: post
 tags:

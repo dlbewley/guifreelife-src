@@ -1,5 +1,6 @@
 ---
 title: Playbook to replace bootstrap.kubeconfig and node certificates on OpenShift 3.10 3.11
+banner: /img/banners/banner-14.jpg
 date: 2019-05-09
 layout: post
 tags:

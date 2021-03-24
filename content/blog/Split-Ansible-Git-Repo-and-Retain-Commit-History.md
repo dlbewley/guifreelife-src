@@ -1,5 +1,6 @@
 ---
 title: Split an Ansible Git Repo and Retain the Commit History
+banner: /img/banners/banner-34.jpg
 date: 2015-03-15
 layout: post
 tags:

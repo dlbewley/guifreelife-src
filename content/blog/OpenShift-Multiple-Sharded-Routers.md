@@ -1,5 +1,6 @@
 ---
 title: Configuring OpenShift with Multiple Sharded Routers
+banner: /img/banners/banner-5.jpg
 date: 2017-01-29
 layout: post
 tags:

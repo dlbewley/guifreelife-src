@@ -1,5 +1,6 @@
 ---
 title: Ansible CMDB Inventory and Facts Reporting
+banner: https://raw.githubusercontent.com/fboender/ansible-cmdb/master/contrib/screenshot-overview.png
 date: 2015-12-06
 layout: post
 tags:

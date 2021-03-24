@@ -1,5 +1,6 @@
 ---
 title: Notes on SNMP MIBs OIDs and Grey Whiskers
+banner: /img/banners/banner-6.jpg
 date: 2015-09-08
 layout: post
 tags:

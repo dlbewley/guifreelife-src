@@ -1,5 +1,6 @@
 ---
 title: Migration of Etcd to Masters for OpenShift 3.9 to 3.10 Upgrade
+banner: /img/banners/banner-33.jpg
 date: 2019-02-08
 layout: post
 tags:

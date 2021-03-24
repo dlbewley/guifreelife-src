@@ -1,5 +1,6 @@
 ---
 title: OpenShift Cluster Metrics and Cassandra Troubleshooting
+banner: /img/banners/banner-40.jpg
 date: 2016-11-14
 layout: post
 tags:

@@ -1,5 +1,6 @@
 ---
 title: Downgrade Etcd 3.3.11 to 3.2.22 for OpenShift Compatibility
+banner: /img/banners/banner-21.jpg
 date: 2019-02-19
 layout: post
 tags:

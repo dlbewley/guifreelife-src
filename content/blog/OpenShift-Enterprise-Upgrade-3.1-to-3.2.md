@@ -1,5 +1,6 @@
 ---
 title: Upgrading OpenShift Enterprise from 3.1 to 3.2
+banner: /img/banners/banner-1.jpg
 date: 2016-05-17
 layout: post
 tags:

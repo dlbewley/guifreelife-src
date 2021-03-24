@@ -1,5 +1,6 @@
 ---
 title: How to push an image to an unexposed OpenShift Docker registry
+banner: /img/banners/banner-34.jpg
 date: 2017-08-09
 layout: post
 tags:

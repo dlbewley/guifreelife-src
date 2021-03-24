@@ -1,5 +1,6 @@
 ---
 title: Automated Pruning of OpenShift Artifacts; Builds, Deploys, Images
+banner: /img/banners/banner-39.jpg
 date: 2017-03-22
 layout: post
 tags:
