@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# adoc todo
+# can not use level `=`
+# includes default to / of repo
+# syntax highlight sucks
+
 src=/Users/dale/src/dlbewley.github.io/_posts
 img_src=/Users/dale/src/dlbewley.github.io/images
 dst=/Users/dale/src/dwnwrd-src/content/blog
