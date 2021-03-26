@@ -132,11 +132,12 @@ paginate = 10
 # Enable or disable top bar with social icons
 [params.topbar]
     enable = true
-    text = """<p class="hidden-sm hidden-xs">Say hello!</p>
-      <p class="hidden-md hidden-lg"><a href="#" data-animate-hover="pulse"><i class="fas fa-phone"></i></a>
-      <a href="#" data-animate-hover="pulse"><i class="fas fa-envelope"></i></a>
-      </p>
-      """
+    text = ""
+#    text = """<p class="hidden-sm hidden-xs">Say hello!</p>
+#      <p class="hidden-md hidden-lg"><a href="#" data-animate-hover="pulse"><i class="fas fa-phone"></i></a>
+#      <a href="#" data-animate-hover="pulse"><i class="fas fa-envelope"></i></a>
+#      </p>
+#      """
 
 # Enable and disable widgets for the right sidebar
 [params.widgets]
