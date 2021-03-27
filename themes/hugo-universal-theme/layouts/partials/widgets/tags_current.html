@@ -1,0 +1,24 @@
+{{ if .Site.Params.widgets.tags }}
+{{ if isset .Params "tags" }}
+ <div class="panel sidebar-menu"> 
+
+    <div class="panel-heading">
+        <h3 class="panel-title">Tagged</h3>
+    </div>
+
+    {{ with .Params.tags }}
+    <div class="panel-body">
+        <ul class="tag-cloud">
+            {{ range . }}
+            <li class="active">
+                <a href="{{ "tags/" | relURL }}{{ . | urlize }}"><i class="fas fa-tags"></i> {{ . }}</a>
+            </li>
+            {{ end }}
+        </ul>
+    </div>
+    {{ end }}
+
+ </div>
+
+{{ end }}
+{{ end }}
