@@ -2,9 +2,9 @@ weight: 4
 title: "Tips and Tricks"
 description: >
   <ul class="list-style-none">
-    <li>Automation</li>
-    <li>Shortcuts</li>
     <li>Best practices</li>
+    <li>Shortcuts</li>
+    <li>Troubleshooting</li>
   </ul>
 image: "images/browser-cert-api.png"
 #image: "img/carousel/template-easy-code.png"

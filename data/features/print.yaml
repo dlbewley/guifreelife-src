@@ -2,5 +2,5 @@ weight: 2
 name: "Programming"
 icon: "fas fa-keyboard"
 # icon: "fas fa-print"
-url: "tags/programming"
-description: "Python, Golang, Shell"
+url: "tags/python"
+description: "Golang, Python, Shell"

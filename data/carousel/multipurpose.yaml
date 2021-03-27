@@ -1,7 +1,9 @@
 weight: 2
 title: "Technical Exploration"
 description: >
-  <p>
-    Deep dives into cutting edge technologies 
-  </p>
+  <ul class="list-style-none">
+    <li>Deep Dives</li>
+    <li>Explanations</li>
+    <li>Walkthroughs</li>
+  </ul>
 image: "images/the-face-of-a-computer-operator-from-the-2134th-communications-squadron-is-2ca9c9.jpg"

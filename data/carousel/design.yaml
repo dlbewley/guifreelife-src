@@ -2,8 +2,8 @@ weight: 3
 title: "How To"
 description: >
   <ul class="list-style-none">
-    <li>Design it</li>
-    <li>Build it</li>
-    <li>Automate it</li>
+    <li>Architect</li>
+    <li>Implement</li>
+    <li>Automate</li>
   </ul>
 image: "images/openshift-openstack-install-network-01.png"
