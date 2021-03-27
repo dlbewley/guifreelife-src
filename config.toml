@@ -74,10 +74,10 @@ paginate = 10
 
 [params]
     viewMorePostLink = "/blog/"
-    author = "DevCows"
-    defaultKeywords = ["devows", "hugo", "go"]
+    author = "Dale Bewley"
+    defaultKeywords = ["bewley", "guifreelife"]
     mainSections = ["blog"]
-    defaultDescription = "Site template made by devcows using hugo"
+    defaultDescription = "GUI Free Life"
 
     # Social media
     facebook_site = "" # the Facebook handle of your site ('https://www.facebook.com/HANDLE')
