@@ -65,11 +65,12 @@ paginate = 10
     url = "http://twitter.com/dlbewley"
     pre = "<i class='fab fa-2x fa-twitter'></i>"
 
-#[[menu.topbar]]
-#    weight = 4
-#    name = "Email"
-#    url = "mailto:dale@bewley.net"
-#    pre = "<i class='fas fa-2x fa-envelope'></i>"
+[[menu.topbar]]
+    weight = 4
+    name = "YouTube"
+    #url = "http://youtube.com/dlbewley"
+    url = "https://www.youtube.com/channel/UCWZw8k_d5U1SeHsMLGY6aIA"
+    pre = "<i class='fab fa-2x fa-youtube'></i>"
 
 [params]
     viewMorePostLink = "/blog/"
@@ -171,8 +172,8 @@ paginate = 10
     #icon = "far fa-file-alt"
     #title = "Do you want to see more?"
     #subtitle = "We have prepared for you more than 40 different HTML pages, including 5 variations of homepage."
-    #link_url = "#"
-    #link_text = "Check other homepages"
+    link_url = "http://guifreelife.com"
+    link_text = "GUI Free Life"
 
 [params.clients]
     enable = false
