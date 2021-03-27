@@ -1,6 +1,6 @@
 ---
 title: Zimbra Exchange Web Services Crashes OS X Mail.app
-banner: /img/banners/banner-37.jpg
+banner: /img/banners/banner-24.jpg
 date: 2015-02-17
 layout: post
 tags: [ mac, zimbra ]

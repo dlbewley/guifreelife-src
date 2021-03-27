@@ -1,12 +1,12 @@
 ---
 title: Configuring OpenShift with Multiple Sharded Routers
-banner: /img/banners/banner-5.jpg
+banner: /img/banners/banner-6.jpg
 date: 2017-01-29
 layout: post
 tags:
  - haproxy
  - kubernetes
- - OCP3.3
+ - OCP3
  - openshift
  - router
 ---

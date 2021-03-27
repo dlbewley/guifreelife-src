@@ -1,13 +1,13 @@
 ---
 title: Upgrading OpenShift Enterprise from 3.1 to 3.2
-banner: /img/banners/banner-1.jpg
+banner: /img/banners/banner-16.jpg
 date: 2016-05-17
 layout: post
 tags:
  - kubernetes
  - openshift
- - OSE3.1
- - OSE3.2
+ - OSE3
+ - upgrade
 ---
 
 Upgrading from OSE 3.1 to 3.2 using the [playbook](https://github.com/openshift/openshift-ansible/blob/master/playbooks/common/openshift-cluster/upgrades/v3_1_to_v3_2/upgrade.yml) went quite well for me, but there were a few issues to sort out.

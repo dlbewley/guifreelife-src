@@ -1,10 +1,11 @@
 ---
 title: Creating OpenStack Provider Network for Use by a Single Project
-banner: /img/banners/banner-5.jpg
+banner: /img/banners/banner-14.jpg
 date: 2018-10-30
 layout: post
 tags:
  - ansible
+ - automation
  - openstack
  - networking
 ---

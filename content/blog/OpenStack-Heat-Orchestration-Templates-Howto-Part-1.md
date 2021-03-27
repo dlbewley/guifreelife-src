@@ -1,9 +1,10 @@
 ---
 title: How to Create and Use OpenStack Heat Orchestration Templates Part 1
-banner: /img/banners/banner-4.jpg
+banner: /img/banners/banner-2.jpg
 date: 2018-11-21
 layout: post
 tags:
+ - automation
  - heat
  - openstack
 ---

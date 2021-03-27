@@ -1,12 +1,12 @@
 ---
 title: Changing the SSL Certificate for OpenShift Console
-banner: /img/banners/banner-43.jpg
+banner: /img/banners/banner-21.jpg
 date: 2016-03-24
 layout: post
 tags:
  - kubernetes
  - openshift
- - OSE3.1
+ - OCP3
  - ssl
 ---
 

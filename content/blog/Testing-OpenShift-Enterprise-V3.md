@@ -1,11 +1,11 @@
 ---
 title: Testing OpenShift Enterprise V3
-banner: /img/banners/banner-18.jpg
+banner: /img/banners/banner-20.jpg
 date: 2015-07-28
 layout: post
 tags:
  - openshift
- - OSEv3.0
+ - OCP3
  - RHEL
 ---
 

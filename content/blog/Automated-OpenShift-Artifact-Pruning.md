@@ -1,11 +1,11 @@
 ---
 title: Automated Pruning of OpenShift Artifacts; Builds, Deploys, Images
-banner: /img/banners/banner-39.jpg
+banner: /img/banners/banner-4.jpg
 date: 2017-03-22
 layout: post
 tags:
  - openshift
- - OCP3.4
+ - OCP3
 ---
 
 After running openshift for a while I discovered that letting builds pile up to around to around 1,200 led to what was essentially a deadlock in the scheduling of new builds. New builds were stuck in a _New, waiting_ state indefinitely.

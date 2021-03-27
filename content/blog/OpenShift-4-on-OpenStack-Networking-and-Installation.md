@@ -4,7 +4,9 @@ banner: /images/openshift-openstack-install-network-port.png
 date: 2020-02-15
 layout: post
 tags:
+ - install
  - openshift
+ - networking
  - openstack
  - OCP4
 ---

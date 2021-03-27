@@ -5,6 +5,7 @@ date: 2015-06-28
 layout: post
 tags:
  - ansible
+ - automation
  - mac
  - openshift
  - vagrant

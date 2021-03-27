@@ -1,10 +1,11 @@
 ---
 title: How To Scale Up Ansible Playbooks and Roles in a Managable Way
-banner: /img/banners/banner-41.jpg
+banner: /img/banners/banner-2.jpg
 date: 2015-05-16
 layout: post
 tags:
  - ansible
+ - automation
 ---
 
 # Ansible is Awesome! Ansible is a Mess! #

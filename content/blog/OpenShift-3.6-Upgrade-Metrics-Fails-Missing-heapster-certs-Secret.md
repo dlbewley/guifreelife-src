@@ -1,11 +1,12 @@
 ---
 title: OpenShift 3.6 Upgrade Metrics Fails Missing heapster-certs Secret
-banner: /img/banners/banner-11.jpg
+banner: /img/banners/banner-7.jpg
 date: 2017-10-13
 layout: post
 tags:
  - openshift
- - OCP3.6
+ - OCP3
+ - troubleshooting
 ---
 
 After your upgrade to OpenShift v3.6 did the [deployment of cluster metrics](https://docs.openshift.com/container-platform/3.6/install_config/cluster_metrics.html) wind up with empty graphs? Check if the heapster pod failed to start due to a missing secret called `heapster-certs` in the `openshift-infra` namespace.

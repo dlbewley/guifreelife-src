@@ -1,6 +1,6 @@
 ---
 title: Openshift V2 and Flask with Virtualenv on OS X
-banner: /img/banners/banner-42.jpg
+banner: /img/banners/banner-1.jpg
 date: 2014-11-22
 layout: post
 tags:

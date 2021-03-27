@@ -4,10 +4,10 @@ banner: /images/thumb/openshift-cdk-metrics-0.png
 date: 2016-06-16
 layout: post
 tags:
+ - CDK
  - kubernetes
  - openshift
- - OSE3.2
- - CDK2.1
+ - OCP3
 ---
 
 **Update!** _I failed with CDK 2.0, but CDK 2.1 works with some fiddling._

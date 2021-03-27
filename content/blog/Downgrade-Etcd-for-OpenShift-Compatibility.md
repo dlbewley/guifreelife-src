@@ -1,12 +1,12 @@
 ---
 title: Downgrade Etcd 3.3.11 to 3.2.22 for OpenShift Compatibility
-banner: /img/banners/banner-21.jpg
+banner: /img/banners/banner-27.jpg
 date: 2019-02-19
 layout: post
 tags:
  - etcd
  - openshift
- - OCP3.9
+ - OCP3
 ---
 
 While I was working on [migrating etcd to my master nodes](http://guifreelife.com/blog/2019/02/08/Migration-of-Etcd-to-Masters-for-OpenShift-3.9-Upgrade-to-3.10) I was bitten by an incompatible etcd v3.3.11 RPM made available via RHEL Server Extras repo. Before I got to my last master the RPM was no longer available, and the scaleup playbook failed. I became aware that 3.3.11 [is not compatible](https://access.redhat.com/articles/2176281) and [should not have been made available](https://access.redhat.com/solutions/3885101). 

@@ -1,12 +1,12 @@
 ---
 title: How to List Tags On Redhat Registry Images
-banner: /img/banners/banner-7.jpg
+banner: /img/banners/banner-23.jpg
 date: 2016-07-11
 layout: post
 tags:
  - docker
  - openshift
- - OSE3.2
+ - OCP3
 ---
 
 

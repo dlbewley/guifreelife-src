@@ -1,6 +1,6 @@
 ---
 title: Using Ansible Filters to Customize the Order Of Hosts in a List
-banner: /img/banners/banner-14.jpg
+banner: /img/banners/banner-23.jpg
 date: 2015-02-01
 layout: post
 tags: [ ansible, zimbra ]
