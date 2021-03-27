@@ -40,5 +40,5 @@ jobs:
           PUBLISH_BRANCH: master
           PUBLISH_DIR: ./public
         with:
-          allow_empty_commit: false
-          commit_message: ${{ github.event.head_commit.message }}
+          emptyCommits: false
+          commitMessage: ${{ github.event.head_commit.message }}
