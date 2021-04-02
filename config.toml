@@ -55,6 +55,12 @@ paginate = 10
 
 [[menu.topbar]]
     weight = 2
+    name = "GitLab"
+    url = "https://gitlab.com/dlbewley"
+    pre = "<i class='fab fa-2x fa-gitlab'></i>"
+
+[[menu.topbar]]
+    weight = 2
     name = "LinkedIn"
     url = "http://linkedin.com/in/dalebewley"
     pre = "<i class='fab fa-2x fa-linkedin'></i>"
