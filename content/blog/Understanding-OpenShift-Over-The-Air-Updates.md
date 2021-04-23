@@ -211,7 +211,7 @@ $ oc get ClusterVersion/version -o jsonpath="{.spec}" | jq
 ```
 
 The `oc adm upgrade` command will use the information from that graph and present any suitable updates.
-[Red Hat OpenShift Container Platform Update Graph](https://access.redhat.com/labs/ocpupgradegraph/update_channel) generates a dynamic graphical representation of the update options.
+[Red Hat OpenShift Container Platform Update Graph][20] generates a dynamic graphical representation of the update options.
 
 ```shell
 $ oc adm upgrade
@@ -381,6 +381,7 @@ For more information on this topic including a video demonstration of the OpenSh
 * [Operator SDK][2]
 * [Ignition Configuration Specifications][4]
 * [OpenShift Upgrading Between Minor Releases][5]
+* [OpenShift Container Platform Update Graph][20]
 * [Machine Configuration Daemon][8]
 * [Machine Config Operator and MachineConfigs][15]
 * [Machine Config Operator and MachineConfigController][19]
@@ -409,3 +410,4 @@ For more information on this topic including a video demonstration of the OpenSh
 [17]: https://github.com/coreos/coreos-assembler "CoreOS Assembler"
 [18]: https://github.com/ostreedev/ostree "OSTree"
 [19]: https://github.com/openshift/machine-config-operator/blob/master/docs/MachineConfigController.md "MachienConfigController"
+[20]: https://access.redhat.com/labs/ocpupgradegraph/update_channel "Red Hat OpenShift Container Platform Update Graph"
