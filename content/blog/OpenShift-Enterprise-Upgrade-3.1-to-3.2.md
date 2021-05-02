@@ -6,7 +6,7 @@ layout: post
 tags:
  - kubernetes
  - openshift
- - OSE3
+ - OCP3
  - upgrade
 ---
 
