@@ -320,7 +320,7 @@ Deployments:
                  StateRoot: rhcos
 ```
 
-#### Machine Config Daemon Troubleshooting
+### Machine Config Daemon Troubleshooting
 
 The MCD is of course running in a pod, so you can spy on its logs on each node and observe its actions or check for problems. For example, while unusual (I've seen the following once), it adds some behind the scenes context. After finding a node as NotReady a problem with the boot config was exposed in the logs.
 
