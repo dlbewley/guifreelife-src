@@ -1,0 +1,16 @@
+{{ if .Site.Params.widgets.toc }}
+{{ if $.Param "toc" }}
+
+{{ if in .TableOfContents "<ul>" }}
+ <div class="panel sidebar-menu"> 
+    <div class="panel-heading">
+        <h3 class="panel-title">TOC</h3>
+    </div>
+    <div class="panel-body">
+        {{ .TableOfContents }}
+    </div>
+ </div>
+{{ end }}
+
+{{ end }}
+{{ end }}
