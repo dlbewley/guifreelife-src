@@ -4,9 +4,28 @@
         <div class="col-md-8">
 
             <section>
-
                 {{ .Content }}
 
+                    <div id="heading">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-xs-5">
+                                    {{ .Site.Params.topbar.text | safeHTML }}
+                                    <p>Are you curious about me or something I said?<br />
+                                    Wanna know more?<br />
+                                    Feel free to contact me.</p>
+                                </div>
+                                <div class="col-xs-7">
+                                    <div class="social">
+                                        {{ range .Site.Menus.topbar.ByWeight }}
+                                        <a href="{{ .URL }}" target="_blank" style="opacity: 1;">{{ .Pre }}</a>
+                                        {{ end }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
                 {{ if isset .Site.Params "formspree_action" }}
 
                 <div class="heading">

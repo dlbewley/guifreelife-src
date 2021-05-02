@@ -117,7 +117,8 @@ paginate = 10
     # - you're done. Happy mailing!
     #
     # Enable the contact form by entering your Formspree.io endpoint url
-    formspree_action = "https://formspree.io/f/mvodpggp"
+    # pretty much just a spam magnet
+    #formspree_action = "https://formspree.io/f/mvodpggp"
     contact_form_ajax = false
 
     about_us = "<p>GUI Free Life is the personal, technical blog of Dale Bewley. Comments and opinions are my own and not that of my employers.</p>"
