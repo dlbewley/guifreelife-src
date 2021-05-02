@@ -5,6 +5,7 @@ themesDir = "themes"
 languageCode = "en-us"
 # Site language. Available translations in the theme's `/i18n` directory.
 defaultContentLanguage = "en"
+enableEmoji = true
 
 disablePathToLower = true 
 theme = "hugo-universal-theme"
@@ -84,6 +85,8 @@ paginate = 10
     defaultKeywords = ["bewley", "guifreelife"]
     mainSections = ["blog"]
     defaultDescription = "GUI Free Life"
+    # enable page tables of contents
+    toc = true
 
     # Social media
     facebook_site = "" # the Facebook handle of your site ('https://www.facebook.com/HANDLE')
@@ -150,6 +153,7 @@ paginate = 10
 [params.widgets]
     categories = true
     tags = true
+    toc = true
     search = true
 
 [params.carousel]
@@ -193,3 +197,30 @@ paginate = 10
     enable = true
     title = "Latest from the blog"
 #    subtitle = "Latest post from the GUIFREELIFE Blog"
+
+[markup]
+  [markup.tableOfContents]
+    endLevel = 4
+    ordered = false
+    startLevel = 1
+
+  [markup.asciidocExt]
+    backend = "html5"
+    extensions = []
+    failureLevel = "fatal"
+    noHeaderOrFooter = true
+    preserveTOC = false
+    safeMode = "unsafe"
+    sectionNumbers = false
+    trace = false
+    verbose = false
+    workingFolderCurrent = false
+    [markup.asciidocExt.attributes]
+      icons = "font"
+      sectlinks = true
+      sectanchors = true
+      source-highlighter = "rouge"
+      rouge-css = "style"
+      rouge-style = "github"
+#      includedir = include
+#      experimental = true
