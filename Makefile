@@ -4,7 +4,7 @@ all: banners thumbnails photogrid
 
 # gather and process images for banners
 banners:
-	./mkbanners.sh
+	./bin/mkbanners.sh
 
 # https://legacy.imagemagick.org/Usage/thumbnails/#cut
 # these thumbnails will be 200x200 even if the image aspect ratio would
