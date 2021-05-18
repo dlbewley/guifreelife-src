@@ -368,7 +368,7 @@ $ openshift-install create install-config --dir="$CLUSTER_DIR"
 $ sed -i 's/OpenShiftSDN/OVNKubernetes/g' $CLUSTER_DIR/install-config.yaml
 ```
 
-* Confirm that `OVNKubernetes` is network type and backup the install config
+* Confirm that `OVNKubernetes` is the network type, and backup the install config
 
 ``` bash
 $ grep networkType $CLUSTER_DIR/install-config.yaml
@@ -384,7 +384,7 @@ $ cp -p $CLUSTER_DIR/install-config.yaml{,.bak-$(date +%Y%m%d)}
 
 Since Linux and [Windows container networking][16] have different methods of configuration, it is necessary to [enable hybrid networking support][4] in OpenShift.
 
-This is an IPI installation which by definition is opnionated and requires very little input. We will be making a small, important customization for configuring OVN-Kubernetes with hybrid networking required to support Windows nodes. We will generate the installer manifests and insert a custom manifest own before deploying the cluster.
+This is an IPI installation which by definition is opnionated and requires very little input. We will be making a small, important customization for configuring OVN-Kubernetes with hybrid networking required to support Windows nodes. We will generate the installer manifests and insert a custom manifest before deploying the cluster.
 
 * Generate manifests
 
@@ -476,7 +476,6 @@ win-x8v2z-master-2              Ready    master   7h35m   v1.20.0+7d0a2b2
 win-x8v2z-worker-westus-d5m68   Ready    worker   7h23m   v1.20.0+7d0a2b2
 win-x8v2z-worker-westus-gj86n   Ready    worker   7h23m   v1.20.0+7d0a2b2
 ```
-
 ## Starting Over
 
 Once the Azure steps are complete, a reinstall of the cluster can be performed pretty quickly. This can be helpful for tweaks or trial an error.
