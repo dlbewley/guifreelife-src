@@ -1,0 +1,8 @@
+{{ $pageurl := .Permalink }}
+<h4>Share</h4>
+<i class="fab fa-2x fa-twitter" title="Share this on Twitter" onclick="window.open('http://twitter.com/home?status={{ $pageurl }}');"></i>
+<i class="fab fa-2x fa-facebook" title="Share this on Facebook" onclick="window.open('http://www.facebook.com/share.php?u={{ $pageurl }}');"></i>
+<i class="fab fa-2x fa-linkedin" title="Share this on Linkedin" onclick="window.open('https://www.linkedin.com/shareArticle?mini=true&url={{ $pageurl }}&title=&summary=&source=');"></i>
+<i class="fab fa-2x fa-google-plus" title="Share this on Google Currents" onclick="window.open('https://plus.google.com/share?url={{ $pageurl }}');"></i>
+<i class="fa  fa-2x fa-envelope" title="Share this through Email" onclick="window.open('mailto:?&body={{ $pageurl }}');"></i>
+{{ if .Params.image }}<i class="fab fa-1x fa-pinterest" title="Share this on Pinterest" onclick="window.open('https://pinterest.com/pin/create/button/?url=&media={{ .Params.image }}&description=');"></i>{{ end }}
