@@ -1,7 +1,7 @@
 ---
 title: Adding a Windows Node to an OpenShift Cluster
 banner: /images/view-of-the-fwd-iss-and-docked-atlantis-during-eva-1-00946b.jpg
-date: 2021-06-04
+date: 2021-06-03
 layout: post
 asciinema: true
 tags:
