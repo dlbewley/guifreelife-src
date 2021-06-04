@@ -368,13 +368,11 @@ $ openshift-install create install-config --dir="$CLUSTER_DIR"
 $ sed -i 's/OpenShiftSDN/OVNKubernetes/g' $CLUSTER_DIR/install-config.yaml
 ```
 
-* Confirm that `OVNKubernetes` is the network type, and backup the install config
+* Confirm that `OVNKubernetes` is the network type
 
 ``` bash
 $ grep networkType $CLUSTER_DIR/install-config.yaml
   networkType: OVNKubernetes
-
-$ cp -p $CLUSTER_DIR/install-config.yaml{,.bak-$(date +%Y%m%d)}
 ```
 
 > 📺 **Watch Demo:** Creating the `install-config.yaml`
@@ -386,9 +384,11 @@ Since Linux and [Windows container networking][16] have different methods of con
 
 This is an IPI installation which by definition is opnionated and requires very little input. We will be making a small, important customization for configuring OVN-Kubernetes with hybrid networking required to support Windows nodes. We will generate the installer manifests and insert a custom manifest before deploying the cluster.
 
-* Generate manifests
+* Generate the installer manifests after backing up the install config
 
 ``` bash
+$ cp -p $CLUSTER_DIR/install-config.yaml{,.bak-$(date +%Y%m%d)}
+
 $ openshift-install create manifests --dir=$CLUSTER_DIR
 INFO Credentials loaded from file "/Users/dale/.azure/osServicePrincipal.json"
 INFO Consuming Install Config from target directory
@@ -431,10 +431,9 @@ $ cp -p $CLUSTER_DIR/day1/cluster-network-03-config.yml $CLUSTER_DIR/manifests/
 
 With the Azure prerequisites complete, and this custom manifest in place it is finally time to [deploy the cluster][17].
 
-* Run the installer
+* Run the installer to create the cluster
 
 ``` bash
-$ cp -p $CLUSTER_DIR/install-config.yaml{,.bak-$(date +%Y%m%d)} # backup install config
 $ openshift-install create cluster --dir="$CLUSTER_DIR" --log-level=debug
 ```
 
@@ -526,5 +525,5 @@ Stay tuned for [part 2][22] where we will use the `WindowsMachineConfigOperator`
 [17]: https://docs.openshift.com/container-platform/4.7/installing/index.html "OpenShift Installation Overview"
 [18]: {{< ref "/blog/Understanding-OpenShift-Over-The-Air-Updates.md">}} "Understanding Over-The-Air Updates"
 [21]: {{< ref "/blog/OpenShift-Windows-Containers-part-1.md" >}} "Windows Containers Part 1"
-[22]: {{< ref "/coming-soon.md" >}} "Windows Containers Part 2"
+[22]: {{< ref "/blog/OpenShift-Windows-Containers-part-2.md" >}} "Windows Containers Part 2"
 [23]: {{< ref "/coming-soon.md" >}} "Windows Containers Part 3"
