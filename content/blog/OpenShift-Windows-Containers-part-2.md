@@ -495,7 +495,7 @@ PS C:\Users\capi> docker network inspect nat
 
 OpenShift enables cloud native workflows for diverse workloads. It enhances automation, resilience, and scalability while enhancing developer productivity for legacy applications. With support for Windows nodes, everyone is invited to dock with the cluster!
 
-After [deploying OpenShift to Azure]({{< ref "/blog/OpenShift-Windows-Containers-part-1.md" >}}) and adding a Windows node using the `WindowsMachineConfigOperator` we are ready to deploy a cross platform application.  Stay tuned for [part 3]({{< ref "/blog/OpenShift-Windows-Containers-part-3.md" >}})!
+After [deploying OpenShift to Azure]({{< ref "/blog/OpenShift-Windows-Containers-part-1.md" >}}) and adding a Windows node using the `WindowsMachineConfigOperator` we are ready to deploy a cross platform application.  Stay tuned for [part 3][23]!
 
 ## References
 
