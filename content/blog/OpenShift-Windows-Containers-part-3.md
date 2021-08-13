@@ -299,8 +299,7 @@ And finally, here is the finished product. The Netcandy Store front end applicat
 
 ## Summary
 
-OpenShift offers support for legacy Windows applications that may be suitable for containerization. Through a hybrid network configuration a dn specialized machine configuration operator both Linux and Windows workloads 
-and flexible runtime support
+OpenShift offers support for legacy Windows applications that may be suitable for containerization. Through a hybrid network configuration and a specialized machine configuration operator, both Linux and Windows workloads can work together in your OpenShift clusters.
 
 ### References
 
