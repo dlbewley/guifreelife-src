@@ -33,7 +33,7 @@ jobs:
           hugo --minify
 
       - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v2
         env:
           ACTIONS_DEPLOY_KEY: ${{ secrets.ACTIONS_DEPLOY_KEY }}
           EXTERNAL_REPOSITORY: dlbewley/dlbewley.github.io
@@ -42,4 +42,3 @@ jobs:
         with:
           emptyCommits: false
           commitMessage: ${{ github.event.head_commit.message }}
-          cname: guifreelife.com
