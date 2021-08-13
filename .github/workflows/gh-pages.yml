@@ -42,3 +42,4 @@ jobs:
         with:
           emptyCommits: false
           commitMessage: ${{ github.event.head_commit.message }}
+          cname: guifreelife.com
