@@ -101,7 +101,6 @@ $ oc get operators --all-namespaces
 No resources found
 ```
 
-
 # Installing the Windows Machine Config Operator
 
 OpenShift uses operators to create and manage the nodes in a cluster along with managment of cluster services.
@@ -528,4 +527,4 @@ After [deploying OpenShift to Azure]({{< ref "/blog/OpenShift-Windows-Containers
 [18]: {{< ref "/blog/Understanding-OpenShift-Over-The-Air-Updates.md" >}} "Understanding Over-The-Air Updates"
 [21]: {{< ref "/blog/OpenShift-Windows-Containers-part-1.md" >}} "Windows Containers Part 1"
 [22]: {{< ref "/blog/OpenShift-Windows-Containers-part-2.md" >}} "Windows Containers Part 2"
-[23]: {{< ref "/coming-soon.md" >}} "Windows Containers Part 3"
+[23]: {{< ref "/blog/OpenShift-Windows-Containers-part-3.md" >}} "Windows Containers Part 3"

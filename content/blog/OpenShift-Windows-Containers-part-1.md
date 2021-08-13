@@ -526,4 +526,4 @@ Stay tuned for [part 2][22] where we will use the `WindowsMachineConfigOperator`
 [18]: {{< ref "/blog/Understanding-OpenShift-Over-The-Air-Updates.md">}} "Understanding Over-The-Air Updates"
 [21]: {{< ref "/blog/OpenShift-Windows-Containers-part-1.md" >}} "Windows Containers Part 1"
 [22]: {{< ref "/blog/OpenShift-Windows-Containers-part-2.md" >}} "Windows Containers Part 2"
-[23]: {{< ref "/coming-soon.md" >}} "Windows Containers Part 3"
+[23]: {{< ref "/blog/OpenShift-Windows-Containers-part-3.md" >}} "Windows Containers Part 3"
