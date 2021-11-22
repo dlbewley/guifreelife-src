@@ -9,7 +9,6 @@ tags:
  - OCP4
  - operators
  - windows
- - azure
 notes_url: https://gitlab.com/dlbewley/openshift-practice/-/blob/master/azure-windows-install.adoc
 ---
 

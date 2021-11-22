@@ -2,6 +2,14 @@ BANNER_DIR=static/img/banners
 
 all: banners thumbnails photogrid
 
+# adoc to docbook to markdown
+# Does not add ```syntax 
+# asciidoctor -b docbook -a leveloffset=+1 -o - README.adoc | pandoc  --atx-headers --wrap=preserve -t markdown_strict -f docbook - > README.md
+# adds `` {.bash} which does not quite work
+# asciidoctor -b docbook -a leveloffset=+1 -o - README.adoc | pandoc  --atx-headers --wrap=preserve -t markdown -f docbook - > README.md
+# github flavored md
+# asciidoctor -b docbook -a leveloffset=+1 -o - README.adoc | pandoc  --atx-headers --wrap=preserve -t gfm -f docbook - > README.md
+
 # gather and process images for banners
 banners:
 	./bin/mkbanners.sh
@@ -29,3 +37,6 @@ clean:
 
 realclean: clean
 	rm -rf $(BANNER_DIR)/thumb
+
+preview:
+	hugo server -D
