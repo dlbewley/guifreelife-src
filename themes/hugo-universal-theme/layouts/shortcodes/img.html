@@ -1,0 +1,13 @@
+<!--https://discourse.gohugo.io/t/how-to-resize-downscale-images/14807/2-->
+{{ $original := .Page.Resources.GetMatch (.Get 0) }}
+
+{{ $preview := $original.Resize "636x" }}
+{{ $alt := "alt text" }}
+
+{{ if lt $original.Width 636 }}
+<img src="{{ $original.RelPermalink }}" width="{{ $original.Width }}" alt="{{ $alt }}">
+{{ else }}
+<a href="{{ $original.RelPermalink }}" target="_blank" title="{{ $alt }}">
+	<img src="{{ $preview.RelPermalink }}" width="{{ $preview.Width }}" alt="{{ $alt }}">
+</a>
+{{ end }}

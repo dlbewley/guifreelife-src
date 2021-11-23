@@ -45,7 +45,7 @@
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="email">{{ i18n "contactMail" }}</label>
-                                <input type="text" class="form-control" name="email" id="email" required>
+                                <input type="email" autocomplete="email" class="form-control" name="email" id="email" required>
                             </div>
                         </div>
                         <div class="col-sm-12">
@@ -54,6 +54,12 @@
                                 <textarea id="message" class="form-control" name="message" required></textarea>
                             </div>
                         </div>
+                        {{ if and .Site.Params.enableRecaptchaInContactForm .Site.Params.googleRecaptchaKey }}
+                        <div class="col-sm-12">
+                            <div class="g-recaptcha" data-sitekey="{{ .Site.Params.googleRecaptchaKey }}"></div>
+                            <br/>
+                        </div>
+                        {{ end }}
 
                         <div class="col-sm-12 text-center">
                           <button type="submit" class="btn btn-template-main"><i class="far fa-envelope"></i>{{ i18n "contactSend" }}</button>
