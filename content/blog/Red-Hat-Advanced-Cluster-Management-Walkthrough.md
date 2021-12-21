@@ -84,9 +84,9 @@ The clusters managed by RHACM can be grouped into ClusterSets which allow for gr
 
 ##  Ansible and ArgoCD Integration
 
-Finally, RHACM can associate lifecycle events and policy violations with Ansible automations to drive infrastructure that may exist outside of Kubernetes for example.
-
 The applications inventories known to OpenShift GitOps or ArgoCD on managed clusters are discovered by the RHACM hub cluster and can be leveraged in automations.
+
+Finally, Ansible automations can be associated with cluster lifecycle events and policy violations to drive infrastructure operations for resources that may exist outside of Kubernetes.
 
 # Video Demo
 
