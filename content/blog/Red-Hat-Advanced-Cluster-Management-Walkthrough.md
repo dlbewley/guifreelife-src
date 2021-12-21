@@ -46,7 +46,7 @@ Full cluster lifecycle management is supported for OpenShift. See the [support m
 
 ## Cluster Pools
 
-Not only one cluster at a time, but entire pools of clusters can be deployed and made available for checkout by developers or for use by transient workloads. When these clusters are not in they are [hibernated][9] to minimize cloud provider cost. Couple this with Single Node OpenShift and it becomes much quicker and cheaper to playground an application. Clusters are not reused after checkout, so you can be sure no one will find highlighting on the pages from the last borrower. 📓
+Not only one cluster at a time, but entire pools of clusters can be deployed and made available for checkout by developers or for use by transient workloads. When these clusters are not in use they are [hibernated][9] to minimize cloud provider cost. Couple this with Single Node OpenShift and it becomes much quicker and cheaper to playground an application. Clusters are not reused after checkout, so you can be sure there won't be "highlighting on the pages" from the last _borrower_. 📓
 
 **Demo: Cluster Pool Deployment Using Kustomize**
 > {{< collapsable prompt="📺 ASCII Screencast" collapse=false >}}
