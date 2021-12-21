@@ -92,7 +92,7 @@ Finally, Ansible automations can be associated with cluster lifecycle events and
 
 All that preamble was just a little context for the following. This video was recorded for a [BrightTALK][13] a couple of months go. It will hopefully provide you a clearer picture of just some of RHACMs capabilities.
 
-**Demo** Overview of RHACM obeservability and appplication & cluster lifecycle features.
+**Demo: Overview of RHACM obeservability and appplication & cluster lifecycle features.**
 > {{< collapsable prompt="📺 YouTube Video" collapse=false >}}
   <p>This video was part of Red Hat's <a href="https://www.brighttalk.com/webcast/15137/515127">BrightTALK Show and Tell</a> summer  2021 webinar series.</p>
   {{% youtube rS9IatJBRP8 %}}
