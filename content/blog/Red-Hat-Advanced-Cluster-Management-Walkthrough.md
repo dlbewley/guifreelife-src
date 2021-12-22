@@ -82,9 +82,9 @@ Not included in the demo is proper treatment of the Governance and Compliance fe
 
 The clusters managed by RHACM can be grouped into ClusterSets which allow for grouping of clusters for purposes like role based access control and inter-cluster networking with [Submariner][11].
 
-##  Ansible and ArgoCD Integration
+##  Ansible and Argo CD Integration
 
-The applications inventories known to OpenShift GitOps or ArgoCD on managed clusters are discovered by the RHACM hub cluster and can be leveraged in automations.
+The applications inventories known to OpenShift GitOps or Argo CD on managed clusters are discovered by the RHACM hub cluster and can be leveraged in automations.
 
 Finally, Ansible automations can be associated with cluster lifecycle events and policy violations to drive infrastructure operations for resources that may exist outside of Kubernetes.
 
