@@ -12,7 +12,11 @@
 
         {{ partial "nav.html" . }}
 
-        {{ partial "breadcrumbs.html" . }}
+        {{ if isset .Params "banner" }}
+          {{ partial "banner_title.html" . }}
+        {{ else }}
+          {{ partial "breadcrumbs.html" . }}
+        {{ end }}
 
         <div id="content">
             <div class="container">
