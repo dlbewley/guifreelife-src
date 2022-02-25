@@ -1,0 +1,20 @@
+<style>
+    .bar.background-image-fixed-banner {
+        background: url('{{ .Params.banner }}') center top no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+        padding: 100px 5%;
+        text-shadow: 2px 3px 4px var(--primary-accent), 0 0 1em var(--navbar-border-top);
+    }
+</style>
+<div >
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <section class="bar background-image-fixed-banner heading h2 color-white text-center">
+                    <h1>{{ .Title }}</h1>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
