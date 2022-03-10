@@ -36,7 +36,7 @@ OpenShift [projects][12] these 3 factors into a pod which may then use them to a
 
 Let's explore this more deeply by looking an example where this process may not be working properly.
 
-# Ingress Cluster Operator is Not Available
+# Degraded Ingress Cluster Operator
 
 Multiple operators interact with STS to assume fine grained roles, but we'll focus on the [Ingress operator][13].
 
@@ -50,7 +50,7 @@ ingress                                              False       True          T
  The "default" ingress controller reports Available=False: IngressControllerUnavailable: One or more status conditions indicate unavailable: DNSReady=False (NoZones: The record isn't present in any zones.)
 ```
 
-# Debugging Ingress Cluster Operator STS Auth
+# Debugging Operator STS Authentication
 
 The Ingress operator needs to authenticate to interact with Route53 service. To do so it seeks to assume a role that was provisioned by the [cloud-credential-operator][7], `ccoctl`, or [by hand][5]. 
 
@@ -68,7 +68,7 @@ $ oc logs -n openshift-ingress-operator deployment/ingress-operator -c ingress-o
 
 It appears the token was not verified.
 
-# Mapping the Operator to the Role
+# Mapping the Operator to a Role
 
 **Is STS authentication and "assume role with web identity" working?**
 
@@ -82,7 +82,7 @@ First, gather some details from the pod's context. Spefically the role to be ass
 
 ## Cloud-credentials Secret
 
-The `cloud-credentials` secret holds the ARN of the role which the pod should assume once authenticated, and the location of the token used to authenticate with. That token will be [automatically][12] available.
+The `cloud-credentials` secret holds the [ARN][14] of the role which the pod should assume once authenticated, and the location of the token used to authenticate with. That token will be [automatically][12] available.
 
 > ```bash
 > $ oc -n openshift-ingress-operator extract secret/cloud-credentials --to=-
@@ -104,7 +104,7 @@ The `cloud-credentials` secret holds the ARN of the role which the pod should as
 > 
 > Download a copy of this file and save the path to `$TOKEN`
 
-## Viewing the Role Contents
+## Viewing the Contents of the Role
 
 Before moving on let's pause and understand a bit more about the IAM role the operator seeks to assume.
 
@@ -150,7 +150,7 @@ spec:
   - ingress-operator
 ```
 
-# Examine the JSON Web Token
+# Examining the JSON Web Token
 
 The [JWT][2] or JSON Web Token which contains **3 fields** delimited by a "**.**".
 
@@ -240,7 +240,7 @@ KEYS=$(curl -s $ISSUER/.well-known/openid-configuration | jq -r .jwks_uri)
 curl -s $KEYS || echo "Failure"
 ```
 
-# Attempt to Authenticate with JWT
+# Testing Authentication with the Token
 
 Use the token to attempt to the assume the role.
 
@@ -353,3 +353,4 @@ If you see an error like this, your pod can not authenticate or isn't authorized
 [11]: <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html> "Creating OpenID Connect (OIDC) identity providers"
 [12]: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection> "Service Account Token Volume Projection"
 [13]: <https://docs.openshift.com/container-platform/4.10/networking/ingress-operator.html> "OpenShift Container Platform Ingress Operator"
+[14]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html "Amazon Resource Name" 
