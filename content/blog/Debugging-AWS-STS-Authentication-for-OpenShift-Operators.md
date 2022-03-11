@@ -304,7 +304,7 @@ If you see an error like this, your pod can not authenticate or isn't authorized
 * Is the key id in the token the same as configured in the OIDC IDP?
 * Is the openid-configuration pointing to the right URL for the keys?
 * Is the audience in the token the same as configured in the OIDC IDP? The identity provider should have 'sts.amazonaws.com' and 'openshift' audiences.
-* Was `credentialsMode` set to manual at OpenShift install tiem?
+* Was `credentialsMode` set to _manual_ at OpenShift install time?
 * Does the token service account match the trust relationship on the role? Notice the namespace and service account names
 > **IAM Role Trust Relationship** Note service account in the condition
 > ```json
@@ -353,4 +353,4 @@ If you see an error like this, your pod can not authenticate or isn't authorized
 [11]: <https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_providers_create_oidc.html> "Creating OpenID Connect (OIDC) identity providers"
 [12]: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection> "Service Account Token Volume Projection"
 [13]: <https://docs.openshift.com/container-platform/4.10/networking/ingress-operator.html> "OpenShift Container Platform Ingress Operator"
-[14]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html "Amazon Resource Name" 
+[14]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html "Amazon Resource Name"
