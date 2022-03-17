@@ -106,7 +106,7 @@ ns2-01.azure-dns.net.
 ns1-01.azure-dns.com.
 ```
 
-## Creating an Azure Service Prinicpal
+## Creating an Azure Service Principal
 
 The OpenShift installer will authenticate as an [Azure application][12] to provision the cluster resources.
 The [cloud credential operator][7] will also use this credential to mint other more targeted credentials for use by the openshift-image-registry, openshift-ingress, and openshift-machine-api operators. 
@@ -318,10 +318,11 @@ $ ssh-add ~/.ssh/az-win
 ## Generating an install-config.yaml
 
 The OpenShift installation process uses an `install-config.yaml` file to understand _how_ to build your cluster.
-Let's creat an install config and make a few adjustments before continuing with the installation.
+Let's create an install config and make a few adjustments before continuing with the installation.
 
 > 📓 **Pro Tip:** The interactive installer will request some details about your Azure account.
-> We already captured them while [Creating an Azure Service Prinicpal](<ref "#creating-an-azure-service-prinicpal">) above.
+> We already captured them while [Creating an Azure Service Prinicpal]({{<ref "#creating-an-azure-service-principal">}}) above.
+
 > Below is a description of how to obtain those values and some variables we used to store them for easier reference.
 > 
 > | Installer Term                        | Retrieval                                                            | Var                |
@@ -331,7 +332,7 @@ Let's creat an install config and make a few adjustments before continuing with 
 > | Azure service principal client id     | `az ad sp list --filter "displayName eq 'ocp4win'" \| jq -r '.[].appId'` | `$az_app_id`   |
 > | Azure service principal client secret | `az ad sp create-for-rbac \| jq .password`                           | `$az_app_password` |
 
-Refer to above table when prompted by the installer for values.
+Refer to the above table when prompted by the installer for corresponding values.
 A JSON file will be created in `~/.azure/osServicePrincipal.json` from the values you provide, but it may be easier and less surprising to just generate it before creating the install config. Let's do that instead.
 
 * Create service principal json file from the values previously captured.
@@ -376,13 +377,13 @@ $ grep networkType $CLUSTER_DIR/install-config.yaml
 ```
 
 > 📺 **Watch Demo:** Creating the `install-config.yaml`
-> {{< asciinema key="az-win-create-install-config" rows="20" start-at="0:14" poster="npt:0:34" loop="true" >}}
+> {{< asciinema key="az-win-create-install-config" rows="20" start-at="0:14" poster="npt:0:34" loop="false" >}}
 
 ## Enabling Hybrid Networking
 
 Since Linux and [Windows container networking][16] have different methods of configuration, it is necessary to [enable hybrid networking support][4] in OpenShift.
 
-This is an IPI installation which by definition is opnionated and requires very little input. We will be making a small, important customization for configuring OVN-Kubernetes with hybrid networking required to support Windows nodes. We will generate the installer manifests and insert a custom manifest before deploying the cluster.
+This is an IPI installation which by definition is opinionated and requires very little input. We will be making a small, important customization for configuring OVN-Kubernetes with hybrid networking required to support Windows nodes. We will generate the installer manifests and insert a custom manifest before deploying the cluster.
 
 * Generate the installer manifests after backing up the install config
 
@@ -453,7 +454,7 @@ $ mkdir /Volumes/Keybase/private/dlbewley/credz/ocp/$CLUSTER_NAME
 $ cp -p $CLUSTER_DIR/auth/* /Volumes/Keybase/private/dlbewley/credz/ocp/$CLUSTER_NAME
 ```
 
-* Pass credentials to `oc` via kubeconfig and login using my [ocp](https://github.com/dlbewley/homelab/blob/master/bin/ocp) script or simply define $KUBECONFIG
+* Pass credentials to `oc` via kubeconfig and login using my [ocp](https://github.com/dlbewley/homelab/blob/master/bin/ocp) script or simply define `$KUBECONFIG`.
 
 ``` bash
 $ export KUBECONFIG=$CLUSTER_DIR/auth/kubeconfig
