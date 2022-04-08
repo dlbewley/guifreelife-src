@@ -335,6 +335,7 @@ If you see an error like this, your pod can not authenticate or isn't authorized
 * [Cloud Credential Operator][7] _Github_
 * [Configuring OpenShift Cloud Crendential Operator][6], See [v4.7 docs][5] for greater detail that is automated by `ccoctl` in later versions
 * [Introducing fine-grained IAM roles for service accounts][4] _AWS_
+* [IAM roles for EKS service accounts][15] _AWS_
 * [Temporary security credentials in IAM][8] _AWS_
 * [Managing access keys for IAM users][9] _AWS_
 * [Creating OpenID Connect (OIDC) identity providers][10] _AWS_
@@ -354,3 +355,4 @@ If you see an error like this, your pod can not authenticate or isn't authorized
 [12]: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#service-account-token-volume-projection> "Service Account Token Volume Projection"
 [13]: <https://docs.openshift.com/container-platform/4.10/networking/ingress-operator.html> "OpenShift Container Platform Ingress Operator"
 [14]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html "Amazon Resource Name"
+[15]: https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts-technical-overview.html "IAM roles for service accounts"
