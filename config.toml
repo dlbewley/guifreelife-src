@@ -13,7 +13,8 @@ theme = "hugo-universal-theme"
 # Enable comments by entering your Disqus shortname
 disqusShortname = "dlbewleygithubio"
 # Enable Google Analytics by entering your tracking code
-googleAnalytics = "UA-78084690-1"
+#googleAnalytics = "UA-78084690-1"
+googleAnalytics = "G-39TSW9349X"
 
 # Define the number of posts per page
 paginate = 10
