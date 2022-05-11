@@ -1,6 +1,7 @@
 ---
 title: "OpenShift Virtualization Networking on vSphere"
 date: 2022-04-13
+# banner image idea "A virtual machine in a container on a virtual machine on a physical ESXi host."
 draft: true
 layout: post
 tags:
@@ -10,18 +11,18 @@ tags:
  - draft
 ---
 
-OpenShift Virtualization builds upon [Kubevirt][2] and provides a container native home for your virtual machine workloads. While bare metal is the only officially platform, it is possible to experiment in a lab using nested virtualization. This post will walk through the basics of enabling OpenShift Virtualization in a vSphere laboratory environment.
+OpenShift Virtualization builds upon [Kubevirt][2] to provide a container native home for your virtual machine workloads. While bare metal is the only officially support platform today, this post will walk through enabling OpenShift Virtualization in a laboratory environment using vSphere and nested virtualization.
 <!--more-->
 
 # Understanding OpenShift Virtualization
 
 Why virtual machines in containers?! 
 
-As you begin to migrate applications to a containerized, cloud-native platform like OpenShift you begin to realize benefits like portability, repeatability, and automation. Applications hosted on virtual machines may not be practical to containerize or even compatible. That doesn't mean they may not be positioned right along side containerized applications.
+As you begin to migrate applications to a containerized, cloud-native platform like OpenShift you begin to realize benefits like portability, repeatability, and automation. Applications hosted on virtual machines may not be practical to containerize or even compatible.
 
 OpenShift Virtualization enables you to run your virtualized workloads on the same platform powering your containerized workloads using a consistent Kubernetes interface.
 
-To experiment with container native virtualization on vSphere let's begin by adjusting the network configuration.
+To experiment with container native virtualization on vSphere let's begin by enabling a suitable network configuration.
 # Configuring vSphere Networking for KubeVirt
 
 You likely already have several networks plumbed to your ESXi Hosts for virtual machine guests to attach to.  It is likely you may attach your containerized virtual machines to these same networks. Virtual Switch Tagging (VST) and Virtual Guest Tagging (VGT) provide the ability to carry a VLAN tag all the way from the physical rack switch through the vSwitch to the guest.
@@ -33,7 +34,7 @@ Configure the portgroup to have vlan type _"VLAN trunking"_ and specify the appr
 
 > **:warning: IMPORTANT** Enable promiscuous mode
 >
-> Switches improve network efficiency by learning where MAC addresses are and not sending traffic where it isn't needed. Because our virtual machines will be using MAC addresses that vSphere does not know about you will see failures such as no response to DHCP requests unless you [modify the security settings of the network or PortGroup][5]. 
+> Switches improve network efficiency by learning where MAC addresses are and not sending traffic where it isn't needed. Because our virtual machines will be using MAC addresses that vSphere does not know about you will see failures such as no response to DHCP or ARP requests unless you [modify the security settings of the network or PortGroup][5].
 
 <!--  {{< figure src="/images/cnv-trunk-0.gif" link="/images/cnv-trunk-0.gif"  caption="Trunk Port Group" width="100%">}} -->
 
@@ -58,14 +59,14 @@ It all starts with a template...
 
 ## Cloning the Existing RHCOS Template as a VM
 
-The [OpenShift Machine API operator][7] builds nodes in vSphere by cloning a guest template that was created during cluster installation. There are changes that must be made to this template to allow for nested virtualization.
+The [OpenShift Machine API operator][7] builds nodes in vSphere by cloning a guest template that was created during cluster installation. This template does not include settings required for nested virtualization.
 
 Clone the "_\*rhcos_" template to a virtual machine so that it is possible to make edits. Give the VM a name that matches the template with "_-cnv_" on the end. So _"hub-7vxwj-rhcos"_ becomes _"hub-7vxwj-rhcos-cnv"_.
 
 📓 We are using "cnv" as shorthand for Container Native Virtualization which predates the OpenShift Virtualization name.
 ## Customizing the Temporary VM 
 
-This VM is temporary. Don't boot it. We just want to make some changes to it that aren't possible to do with a static template.
+This VM is temporary. Don't boot it. We just want to use it to make some changes that aren't possible to make on a static template.
 
 >**Make These Changes**
 > * Enable these CPU features: Hardware virtualization, IOMMU, Performance counters
@@ -81,9 +82,20 @@ Once these changes have been made, convert this VM to a template. Keep the same 
 
 **How do we tell OpenShift to use this template?**
 
-[MachineSets][8] define how many machines to build for nodes and exactly how to build them, so next create a MachineSet that uses the just created template.
+[MachineSets][8] define how many machines to provision as worker nodes and exactly how to build them.
 
-Based on the existing worker machineset we will create a new one that is CNV specific.
+Based on the existing worker machineset, create a new one that is CNV specific. This machineset will use the newly created template.
+
+```shell
+# copy existing worker machineset
+INFRA_ID=$(oc get infrastructure/cluster -o jsonpath='{.status.infrastructureName}')
+echo $INFRA_ID
+hub-7vxwj
+oc get machineset/${INFRA_ID}-worker -n openshift-machine-api -o yaml > ${INFRA_ID}-cnv.yaml
+# modify to look like the example below and create it
+vi ${INFRA_ID}-cnv.yaml
+oc create -f ${INFRA_ID}-cnv.yaml -n openshift-machine-api
+```
 
 >  📓 **`MachineSet` For Workers With Virtualization**
 > 
@@ -147,21 +159,22 @@ Based on the existing worker machineset we will create a new one that is CNV spe
 
 # Configuring OpenShift Virtualization Networking
 
-Install OpenShift Virtualization (also known as CNV) using the web UI or GitOps and [this repo](https://github.com/redhat-cop/gitops-catalog/tree/main/virtualization-operator).
+**Install OpenShift Virtualization** using the web UI or GitOps and [this repo](https://github.com/redhat-cop/gitops-catalog/tree/main/virtualization-operator).
 
-Once CNV is installed and a `Hyperconverged` resource has been created the _nmstate.io_ API group will become available.
+Once installed and a `Hyperconverged` resource has been created, the _nmstate.io_ API group will become available.
 
-```shell
-$ oc api-resources --api-group nmstate.io
-NAME                                 SHORTNAMES   APIVERSION           NAMESPACED   KIND
-nodenetworkconfigurationenactments   nnce         nmstate.io/v1beta1   false        NodeNetworkConfigurationEnactment
-nodenetworkconfigurationpolicies     nncp         nmstate.io/v1beta1   false        NodeNetworkConfigurationPolicy
-nodenetworkstates                    nns          nmstate.io/v1beta1   false        NodeNetworkState
-```
+> :notebook: **[nmstate.io][3] API Group Resources** for node network configuration
+  ```shell
+  $ oc api-resources --api-group nmstate.io
+  NAME                                 SHORTNAMES   APIVERSION           NAMESPACED   KIND
+  nodenetworkconfigurationenactments   nnce         nmstate.io/v1beta1   false        NodeNetworkConfigurationEnactment
+  nodenetworkconfigurationpolicies     nncp         nmstate.io/v1beta1   false        NodeNetworkConfigurationPolicy
+  nodenetworkstates                    nns          nmstate.io/v1beta1   false        NodeNetworkState
+  ```
 
 ## Creating a Node Network Configuration Policy
 
-If we want to use all the VLANs we are trunking to a node, we need to tell OpenShift how to configure the network.
+If we want to use all the VLANs we are trunking to a node, we need to tell OpenShift how to configure NIC for all those networks.
 Using resources from the [NMState API][3] we can configure the networking in the node operating system.
 
 Create a `NodeNetworkConfigurationPolicy` that will be used to configure the 2nd NIC for us in a way that will present each VLAN as a bridge.
@@ -174,7 +187,7 @@ Notice in this case that the 2nd NIC _ens224_ exists, but it has no useful confi
 
 > 📓 **`NodeNetworkConfigurationPolicy` For Workers With Virtualization**
 >
-> Notice on line 7 we are checking for a label that that is common to our nodes with nested virtualization. This will cause our NNCP to be applied only to the appropriate nodes.
+> Notice on line 7 we are checking for a label that is common to the nodes with virtualization support. This will ensure our NNCP is applied only to the appropriate nodes.
 
 ```yaml  {linenos=inline,hl_lines=[7]}
 apiVersion: nmstate.io/v1beta1
@@ -301,11 +314,9 @@ spec:
             vlan: {}
 ```
 
-> :warning: **Inaccurate Kubevirt Labels**
+> :warning: **Ambiguous Kubevirt Labels**
 >
-> Ideally, we could rely on the label _cpu-feature.node.kubevirt.io/hypervisor: "true"_, 
-> unfortunately all workers wil will be automatically labeled to indicate they have virtualization features even if they do not.
-> I'm not yet sure how to avoid this and need to create a BZ. **TODO** ⭐
+> Ideally, we could rely on a label like _kubevirt.io/scheduleable: "true"_, but in my experience that label is not unique to hosts having virtualization extensions. I have opened a bug to find out more. <https://bugzilla.redhat.com/show_bug.cgi?id=2081133>
 ## Confirming Node Networking Configuration Changes
 
 After creation of the NodeNetworkConfigurationPolicy, a `NodeNetworkConfigurationEnablement` will be created for each node that satisfies the node selector in the policy. (_machine.openshift.io/cluster-api-machineset: hub-7vxwj-cnv_)
@@ -400,6 +411,29 @@ vlan-1928   1m
 ```
 
 Once the network attachment definition is available, a VM can be launch using this network on a bridged interface.
+
+# Creating a Containerized VM
+
+I'll leave the details of creating and using VMs in OpenShift for another time, but I will complete the example.
+
+Create a virtual machine in the OpenShift console, and customize the VM by adding a 2nd NIC. Select the `vlan-1928` network attachment definition created above.
+
+> :notebook: **Select The Proper Namespace**
+>
+> Remember that network attachment definitions are namespace scoped, as are VMs. Select the _provisioning_ namespace when creating the virtual machine.
+
+{{< figure src="/images/cnv-vm-1.png" link="/images/cnv-vm-1.png"  caption="VM Dialog: Add 2nd NIC" width="100%">}}
+
+After booting and logging into the VM, it can be seen that the eth1 NIC obtained an IP address from the DHCP server on the provisioning LAN.
+
+{{< figure src="/images/cnv-vm-2.png" link="/images/cnv-vm-2.png"  caption="VM console showing eth1 Provisioning LAN" width="100%">}}
+
+# Summary
+
+Now you have the ability to kick the tires on OpenShift Virtualization using vSphere in your lab. [Explore][1] and experiment with its features as you architect a solution that leverages bare-metal nodes at a greater scale.
+
+Have fun!
+
 # References
 
 * [About OpenShift virtualization][1]
@@ -407,7 +441,7 @@ Once the network attachment definition is available, a VM can be launch using th
 * [NMState.io][3]
 * [Machine API Operator][7]
 * [MachineSet API][8]
-* [Enabling CNV Nested Virtualization on KVM Hypervisors][10]
+* [Enabling CNV Nested Virtualization on KVM Hypervisors][10] is Tech Preview
 
 [1]: <https://docs.openshift.com/container-platform/4.10/virt/about-virt.html> "About OpenShift virtualization"
 [2]: <https://kubevirt.io> "KubeVirt.io"
