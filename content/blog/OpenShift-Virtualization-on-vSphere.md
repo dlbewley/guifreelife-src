@@ -1,7 +1,8 @@
 ---
-title: "OpenShift Virtualization Networking on vSphere"
+title: "OpenShift Virtualization on vSphere"
 date: 2022-04-13
-# banner image idea "A virtual machine in a container on a virtual machine on a physical ESXi host."
+# https://library.techsmith.com/camtasia/assets/asset/seg/2100290518_d4f32587-f5e7-4780-a290-1363be1a97d7
+banner: /images/shutterstock_2100290518.jpg
 draft: true
 layout: post
 tags:
@@ -11,7 +12,7 @@ tags:
  - draft
 ---
 
-OpenShift Virtualization builds upon [Kubevirt][2] to provide a container native home for your virtual machine workloads. While bare metal is the only officially support platform today, this post will walk through enabling OpenShift Virtualization in a laboratory environment using vSphere and nested virtualization.
+OpenShift Virtualization builds upon [KubeVirt][2] to provide a container native home for your virtual machine workloads. While bare metal is the only officially support platform today, this post will walk through enabling OpenShift Virtualization on vSphere in a lab environment. With nested virtualization you'll be able to spin up containerized VMs bridged to your physical networks.
 <!--more-->
 
 # Understanding OpenShift Virtualization
@@ -25,7 +26,7 @@ OpenShift Virtualization enables you to run your virtualized workloads on the sa
 To experiment with container native virtualization on vSphere let's begin by enabling a suitable network configuration.
 # Configuring vSphere Networking for KubeVirt
 
-You likely already have several networks plumbed to your ESXi Hosts for virtual machine guests to attach to.  It is likely you may attach your containerized virtual machines to these same networks. Virtual Switch Tagging (VST) and Virtual Guest Tagging (VGT) provide the ability to carry a VLAN tag all the way from the physical rack switch through the vSwitch to the guest.
+Virtual machines will attach to the pod network by default. You likely already have several networks plumbed to your ESXi Hosts, and it's likely you may want to attach your containerized virtual machines to these same networks. Virtual Switch Tagging (VST) and Virtual Guest Tagging (VGT) provide the ability to carry a VLAN tag all the way from the physical rack switch through the vSwitch to a guest.
 
 ## Adding a PortGroup to vSwitch
 
@@ -38,7 +39,7 @@ Configure the portgroup to have vlan type _"VLAN trunking"_ and specify the appr
 
 <!--  {{< figure src="/images/cnv-trunk-0.gif" link="/images/cnv-trunk-0.gif"  caption="Trunk Port Group" width="100%">}} -->
 
-> {{< figure src="/images/cnv-trunk-1.png" link="/images/cnv-trunk-1.png"  caption="Trunk Port Group for Standard vSwitch" width="100%">}}
+{{< figure src="/images/cnv-trunk-1.png" link="/images/cnv-trunk-1.png"  caption="Trunk Port Group for Standard vSwitch" width="100%">}}
 
 > {{< collapsable prompt="Distributed vSwitch Option" collapse=true >}}
   {{< figure src="/images/cnv-trunkpg-1.png" link="/images/cnv-trunkpg-1.png"  caption="Example of Port Group for a Distributed vSwitch" width="100%">}}
@@ -63,16 +64,16 @@ The [OpenShift Machine API operator][7] builds nodes in vSphere by cloning a gue
 
 Clone the "_\*rhcos_" template to a virtual machine so that it is possible to make edits. Give the VM a name that matches the template with "_-cnv_" on the end. So _"hub-7vxwj-rhcos"_ becomes _"hub-7vxwj-rhcos-cnv"_.
 
-📓 We are using "cnv" as shorthand for Container Native Virtualization which predates the OpenShift Virtualization name.
+> 📓 We are using "cnv" as shorthand for Container Native Virtualization which predates the OpenShift Virtualization name.
 ## Customizing the Temporary VM 
 
 This VM is temporary. Don't boot it. We just want to use it to make some changes that aren't possible to make on a static template.
 
->**Make These Changes**
-> * Enable these CPU features: Hardware virtualization, IOMMU, Performance counters
-> * Add a 2nd NIC attached to the `Trunk` portgroup
->
-> {{< figure src="/images/cnv-cpu-1.png" link="/images/cnv-cpu-1.png"  caption="CNV Node Template with Customizations" width="100%">}}
+**Make These Changes**
+* Enable these CPU features: Hardware virtualization, IOMMU, Performance counters
+* Add a 2nd NIC attached to the `Trunk` portgroup
+
+{{< figure src="/images/cnv-cpu-1.png" link="/images/cnv-cpu-1.png"  caption="CNV Node Template with Customizations" width="100%">}}
 
 ## Converting the Customized VM to a Template
 
