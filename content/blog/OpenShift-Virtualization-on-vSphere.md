@@ -429,9 +429,9 @@ After booting and logging into the VM, it can be seen that the eth1 NIC obtained
 
 # Summary
 
-Having enabled CPU virtualization extensions on the virtual machine template and adding trunk support to the vswitch you can launch virtual machines in your OpenShift cluster on vSphere with access to your lab networks.
+Having enabled CPU virtualization extensions on the virtual machine template and adding trunk support to the vswitch you can now launch virtual machines in your OpenShift cluster on vSphere with access to your lab networks.
 
-This is a great way [explore OpenShift Virtualization][1] and experiment with its features as you architect a production use case that leverages bare-metal nodes at a greater scale.
+This is a great way to [explore OpenShift Virtualization][1] and experiment with its features as you architect a production use case that leverages bare-metal nodes at a greater scale.
 
 Have fun!
 
