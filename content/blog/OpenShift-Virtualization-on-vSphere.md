@@ -1,15 +1,13 @@
 ---
 title: "OpenShift Virtualization on vSphere"
-date: 2022-04-13
+date: 2022-05-13
 # https://library.techsmith.com/camtasia/assets/asset/seg/2100290518_d4f32587-f5e7-4780-a290-1363be1a97d7
 banner: /images/shutterstock_2100290518.jpg
-draft: true
 layout: post
 tags:
  - openshift
  - OCP4
  - virtualization
- - draft
 ---
 
 OpenShift Virtualization builds upon [KubeVirt][2] to provide a container native home for your virtual machine workloads. While bare metal is the only officially support platform today, this post will walk through enabling OpenShift Virtualization on vSphere in a lab environment. With nested virtualization you'll be able to spin up containerized VMs bridged to your physical networks.
@@ -431,13 +429,15 @@ After booting and logging into the VM, it can be seen that the eth1 NIC obtained
 
 # Summary
 
-Now you have the ability to kick the tires on OpenShift Virtualization using vSphere in your lab. [Explore][1] and experiment with its features as you architect a solution that leverages bare-metal nodes at a greater scale.
+Having enabled CPU virtualization extensions on the virtual machine template and adding trunk support to the vswitch you can launch virtual machines in your OpenShift cluster on vSphere with access to your lab networks.
+
+This is a great way [explore OpenShift Virtualization][1] and experiment with its features as you architect a production use case that leverages bare-metal nodes at a greater scale.
 
 Have fun!
 
 # References
 
-* [About OpenShift virtualization][1]
+* [About OpenShift Virtualization][1]
 * [KubeVirt.io][2]
 * [NMState.io][3]
 * [Machine API Operator][7]
