@@ -7,6 +7,7 @@ layout: post
 tags:
  - openshift
  - RHACM
+ - webinar
 notes_url: https://docs.google.com/document/d/1veVSKoT9IE91oMjAHENNKnYSKhFDusQSRc7krTDTk_w/edit#heading=h.7i52732yar9x
 ---
 
@@ -14,6 +15,8 @@ Red Hat Advanced Cluster Management for Kubernetes, [RHACM][2], built on the Ope
 
 Skip to the end for the complete [video demo][8] or take your time and stroll through a few quick GUI Free reanimations on your way there.
 <!--more-->
+
+> :notebook: _Check out the 2021 [RHACS Walkthrough][17]._
 
 # Advanced Cluster Management Features
 
@@ -113,6 +116,7 @@ All that preamble was just a little context for the following. This video was re
 * [BrightTALK Application portability and multicluster management][13]
 * [Implement Policy-based Governance Using Configuration Management of RHACM][14]
 * [OpenShift Developer Sandbox][15]
+* [Red Hat Advanced Cluster Security Walkthrough 2021][17]
 
 [1]: https://open-cluster-management.io/ "Open Cluster Management"
 [2]: https://www.redhat.com/en/technologies/management/advanced-cluster-management "Red Hat Advanced Cluster Management for Kubernetes"
@@ -130,3 +134,4 @@ All that preamble was just a little context for the following. This video was re
 [14]: https://cloud.redhat.com/blog/implement-policy-based-governance-using-configuration-management-of-red-hat-advanced-cluster-management-for-kubernetes "Implement Policy-based Governance Using Configuration Management of RHACM"
 [15]: https://www.redhat.com/en/technologies/cloud-computing/openshift/try-it "OpenShift Developer Sandbox"
 [16]: https://docs.openshift.com/container-platform/4.9/installing/installing_sno/install-sno-preparing-to-install-sno.html "Single Node OpenShift"
+[17]: {{< ref "/blog/Red-Hat-Advanced-Cluster-Security-Walkthrough.md" >}} "RHACS Walkthrough 2021"
