@@ -7,6 +7,7 @@ tags:
  - openshift
  - OCP4
  - operators
+ - webinar
 ---
 
 OpenShift 4 extends the [operator pattern introduced by CoreOS][9], and enables automated management of the Kubernetes cluster and the underlying resources including machine instances and operating system configuration. Operator driven over the air updates enable automated updates much like you are accustomed to receiving for your smart phone. What follows is a a technical exploration of the OpenShift over the air updates implementation.
