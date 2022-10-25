@@ -206,6 +206,11 @@ paginate = 10
     ordered = false
     startLevel = 1
 
+  [markup.highlight]
+    # https://xyproto.github.io/splash/docs/all.html
+    #style="tango"
+    style="perldoc"
+
   [markup.asciidocExt]
     backend = "html5"
     extensions = []
