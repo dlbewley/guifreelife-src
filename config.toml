@@ -76,8 +76,8 @@ paginate = 10
 [[menu.topbar]]
     weight = 4
     name = "YouTube"
-    #url = "http://youtube.com/dlbewley"
-    url = "https://www.youtube.com/channel/UCWZw8k_d5U1SeHsMLGY6aIA"
+    #url = "https://www.youtube.com/channel/UCWZw8k_d5U1SeHsMLGY6aIA"
+    url = "https://youtube.com/@guifreelife"
     pre = "<i class='fab fa-2x fa-youtube'></i>"
 
 [params]
