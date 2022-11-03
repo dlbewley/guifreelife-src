@@ -1,7 +1,6 @@
 ---
 title: "Autoscaling OpenShift Workloads With Custom Prometheus Metrics"
 date: 2022-11-03
-draft: true
 banner: /images/openshift-keda-autoscaling-sequence.png
 layout: post
 asciinema: true
