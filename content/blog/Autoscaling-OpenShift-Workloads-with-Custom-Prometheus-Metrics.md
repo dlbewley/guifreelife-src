@@ -1,6 +1,6 @@
 ---
 title: "Autoscaling OpenShift Workloads With Custom Prometheus Metrics"
-date: 2022-10-13
+date: 2022-11-03
 draft: true
 banner: /images/openshift-keda-autoscaling-sequence.png
 layout: post
@@ -13,7 +13,7 @@ tags:
  - monitoring
 ---
 
-Kubernetes enables the automated scaling of applications to meet workload demands. Historically only memory and CPU consumption could be considered in scaling decisions. Now scaling can be based on nearly anything using custom metrics. Read on to learn how the Openshift Custom Metric Autoscaler Operator and KEDA allows you to scale based on the dimensions that are important to your business.
+Kubernetes enables the automated scaling of applications to meet workload demands. Historically only memory and CPU consumption could be considered in scaling decisions, but the OpenShift Custom Metrics Autoscaler operator and KEDA remove that limitation. Read on to learn how OpenShift enables auto scaling based on the metrics that are important to your business.
 
 <!--more-->
 
@@ -21,20 +21,19 @@ Kubernetes enables the automated scaling of applications to meet workload demand
 
 OpenShift includes monitoring and alerting out of the box. Batteries included.
 
-Metrics are continuously collected and evaluated against dozens of predefined rules that identify potential issues. Metrics are also stored for review in graphical dashboards enabling troubleshooting and proactive capacity analysis.
+Metrics are continuously collected and evaluated against dozens of predefined rules that identify potential issues. Metrics are also stored for review in graphical dashboards enabling troubleshooting and proactive capacity analysis. 
 
-All of the metrics can also be queried using ad hoc PromQL syntax in the console at _Observe -> Metrics_.
+All of these metrics can be queried using Prometheus PromQL syntax in the console at _Observe -> Metrics_.
 
 {{< figure src="/images/keda-dashboard-metrics.png" link="/images/keda-dashboard-metrics.png"  caption="OpenShift Metrics Queries" width="100%">}}
 
-> **:star: Pro Tip:** Red Hat Advanced Cluster Management aggregates metrics from all your clusters to a single pane of glass. See posts with the [RHACM tag]({{< ref "/tags/RHACM" >}})
+> **:star: Pro Tip:** Red Hat Advanced Cluster Management aggregates metrics from all your clusters to a single pane of glass. See blog posts with the [RHACM tag]({{< ref "/tags/RHACM" >}})
 
 **What is monitored?**
 
-Prometheus is the engine driving the metrics collection.
-These metrics are collected or "scraped" from Targets which can be found in the console at _Observe -> Targets_.
+All metrics are collected or "scraped" from Targets which can be found in the console at _Observe -> Targets_.  These targets are defined using `ServiceMonitor` resources.
 
-These targets are defined using `ServiceMonitor` resources. For example there are ServiceMonitors for [Kube State Metrics][15]:
+For example there are ServiceMonitors for [Kube State Metrics][15]:
 
 ```bash
 $ oc get servicemonitor/kube-state-metrics -n openshift-monitoring -o yaml | yq e '.spec.selector' -
@@ -69,21 +68,19 @@ s3-service-monitor                                6d
 
 # Understanding Horizontal Pod Autoscaling
 
-[Horizontal pod autoscaling][14] (HPA) has been a feature since the earliest days of OpenShift. Traditionally, it has only been possible usable with CPU and memory consumption metrics.
+[Horizontal pod autoscaling][14] (HPA) has been a feature since the earliest days of OpenShift, but scaling was triggered only by CPU and memory consumption metrics. When the average CPU load of pods in an application reached an identified threshold the Deployment or StatefulSet that created the pod was resized to add more pod replicas. When the load receded, the application was scaled down and the extra pods were terminated.
 
-When the CPU load of a pod reached an identified threshold, the Deployment or StatefulSet that created the pod was resized to add more pod replicas. When the load receeded, the resource was scaled down and the extra pods were terminated.
+Unfortunately, those simplistic metrics may not tell the whole story for your application.
 
-Today, using the OpenShift [Custom Metrics Autoscaler operator][5], we can create our own custom metrics and arbitrary PromQL queries can drive HPA.
+The OpenShift [Custom Metrics Autoscaler operator][5] (CMA) enables you to create your own custom metrics and tailored PromQL queries for scaling. CMA is based on the upstream [Kubernetes Event Driven Autoscaling][2] project which makes it possible to trigger on a [number of event sources][4] or "Scalers" in the KEDA vernacular. We will use the [Prometheus scaler][15].
 
-The Custom Metrics Autoscaler operator is based on the upstream [Kubernetes Event Driven Autoscaling][2] project. KEDA makes it possible to trigger an autoscaling on a [number of event sources][4] or "Scalers" in the KEDA vernacular. We will use the [Prometheus scaler][15].
-
-> **:star: Pro Tip:** This may remind you of [OpenShift Serverless][17], but the use case differs. KEDA, for example will only permit you to scale as low as 1 pod. See [Knative versus KEDA][12]
+> **:star: Pro Tip:** This may remind you of [OpenShift Serverless][17], but the use case differs. KEDA, for example, will only permit you to scale as low as 1 pod. See [Knative versus KEDA][12]
 
 # Prerequisites
 
 ## Enabling OpenShift User Workload Monitoring
 
-To begin monitoring of our own custom application we must first [enable user workload monitoring][13] in OpenShift.
+To begin monitoring our own custom application we must first [enable user workload monitoring][13] in OpenShift.
 
 Easy peasy.
 
@@ -104,7 +101,7 @@ $ oc set data configmap/cluster-monitoring-config \
 
 Next, we must install the OpenShift [Custom Metrics Autoscaler operator][5] which is built on the [KEDA][2] project. In addition to installing the operator, a `KedaController` operand must be created which will result in the deployment of pods to the openshift-keda namespace.
 
-> **Demo:** Deploying and [configuring KEDA](https://github.com/dlbewley/demo-custom-metric-autoscaling/tree/main/operator) using kustomize:
+> **Demo:** Deploying and [configuring KEDA](https://github.com/dlbewley/demo-custom-metric-autoscaling/tree/main/operator) using Kustomize:
 
 ```bash
 $ oc apply -k operator
@@ -116,17 +113,25 @@ $ oc apply -k operator
 # checking the status of KEDA
 $ oc logs -f -n openshift-keda -l app=keda-operator
 ```
+
 # Using Custom Metrics Autoscaling
 
-Let's walk through an example using two applications. One will be the metered app called "prometheus-example-monitor" which exists only to provide a metric. Imagine this metric describes an amount of work piled up in a queue. The second application called "static app" actually performs the work, and it will autoscale based on the metric advertised by the metered app.
+Let's walk through an example using two applications. One will be the metered app called "prometheus-example-app" which exists only to provide a metric. Imagine this metric describes an amount of work piled up in a queue. The second application called "static-app" actually performs the work, and it will autoscale based on the metric advertised by the metered app.
 
 ## Enabling Custom Metrics in our Application
 
-Prometheus expects applications to provide a `/metrics` endpoint which returns data in a format it understands.  I will make use of an existing example application. See the [Prometheus docs](https://prometheus.io/docs/prometheus/latest/getting_started/) to instrument your application. We'll use a contrived example app here.
+Prometheus expects applications to provide a `/metrics` endpoint which returns data in a format it understands. See the [Prometheus docs](https://prometheus.io/docs/prometheus/latest/getting_started/) to get started with instrumenting your application. We'll use a contrived [example app][8] here.
 
-> **Demo:** Deploying an [example metered application](https://github.com/dlbewley/demo-custom-metric-autoscaling/tree/main/custom-metric-app) using kustomize:
+> :warning: **Apply the Appropriate Monitoring ClusterRole:** Creation of a `ServiceMonitor` is privileged, so unless you are a cluster admin you may have to request one of the following roles such as `monitoring-edit`.
 
-```bash
+* `monitoring-rules-view` grants read access to PrometheusRule custom resources for a project.
+* `monitoring-rules-edit` grants create, modify, and deleting PrometheusRule custom resources for a project.
+* `monitoring-edit` grants `monitoring-rules-edit` plus grants creation of new scrape targets for services or pods. This cluster role is needed to create, modify, and delete ServiceMonitor and PodMonitor resources.
+
+
+> **Demo:** [Deploying](https://github.com/dlbewley/demo-custom-metric-autoscaling/tree/main/custom-metric-app)  an example metered application using Kustomize:
+
+```bash  {hl_lines=[5]}
 $ oc apply -k custom-metric-app
     namespace/keda-test created
     service/prometheus-example-app created
@@ -135,25 +140,15 @@ $ oc apply -k custom-metric-app
     route.route.openshift.io/prometheus-example-app created
 ```
 
-> :warning: **Warning:**  Creation of a ServiceMonitor is privileged, so unless you are an admin you may have to request one of the following roles such as `monitoring-edit`.
-
-Monitoring ClusterRoles:
-
-* `monitoring-rules-view` grants read access to PrometheusRule custom resources for a project.
-* `monitoring-rules-edit` grants create, modify, and deleting PrometheusRule custom resources for a project.
-* `monitoring-edit` grants `monitoring-rules-edit` plus create new scrape targets for services or pods. With this role, you can also create, modify, and delete ServiceMonitor and PodMonitor resources.
-
 ## Understanding ServiceMonitors
 
 > {{< figure src="/images/openshift-keda-autoscaling-sequence-1.png" link="/images/openshift-keda-autoscaling-sequence-1.png"  caption="Exposing Custom Prometheus Metrics" width="100%">}}
 
-The OpenShift-monitoring operator automates the configuration of Prometheus. A `ServiceMonitor` resource tells Prometheus to target a Service and grab any metrics that are exported by that service.
+The OpenShift-monitoring operator automates the configuration of Prometheus using the ServiceMonitor resource to target matching Services and scrape any metrics that are exported at `/metrics`.
 
-Imagine a case where a metered-app is regularly checking a topic in Kafka to determine the length of a queue of work. We don't care to scale this application, but we want to use its knowledge to scale another app.
+Imagine a case where a metered-app is regularly checking a topic in Kafka to determine the length of a queue of work. We don't care to scale _this_ application, but we want to use its _knowledge_ to scale another app.
 
-Using a `ServiceMontior` ([example](https://github.com/dlbewley/demo-custom-metric-autoscaling/blob/main/custom-metric-app/servicemonitor.yaml)) we tell Prometheus to connect to a service and scrape the metrics available at `/metrics`. This is what is known as a Target in Prometheus-speak.
-
-> :warning: **Warning:** Be sure to name the port in the Service definition and reference the name not the number in the ServiceMonitor definition! Symptoms include no Target nor metrics visible in Prometheus.
+> :warning: **Warning:** Be sure to name the port in the Service definition and reference this name and not the number in the ServiceMonitor definition! Symptoms include no Target nor metrics visible in Prometheus.
 
 Example `ServiceMonitor` resource for the metered app
 
@@ -176,9 +171,11 @@ spec:
 ```
 ## Deploying A Scaled Application
 
+Another app exists to perform work based on that example work queue. It performs tasks in parallel, so it can benefit from scaling out horizontally. 
+
 > **Demo:** Deploying an [example scaled application](https://github.com/dlbewley/demo-custom-metric-autoscaling/tree/main/scaled-app) using kustomize:
 
-```bash
+```bash  {hl_lines=[11]}
 $ oc apply -k scaled-app
     namespace/keda-test unchanged
     serviceaccount/thanos unchanged
@@ -194,61 +191,44 @@ $ oc apply -k scaled-app
     route.route.openshift.io/static-app configured
 ```
 
-Notice that we did not create a HorizontalPodAutoscaler, but one was created automatically using the information in the ScaledObject resource:
+Notice that we did not create a HorizontalPodAutoscaler above, but one was created automatically using the information in the ScaledObject resource:
 
 ```bash
 $ oc get hpa
 NAME                  REFERENCE               TARGETS     MINPODS   MAXPODS   REPLICAS   AGE
 keda-hpa-static-app   Deployment/static-app   0/5 (avg)   1         10        1          14d
 ```
+## Understanding ScaledObjects
 
-## Understanding Thanos
+Now that a custom metric is being collected, and an app exists which can benefit from the knowledge in this metric to scale more effectively, the two can be joined together using a `ScaledObject` resource.
 
-OpenShift workload monitoring actually introduces a second Prometheus instance distinct from the platform instance. KEDA will we need an intermediatary to speak to when looking up metrics. This is where Thanos fits in. The KEDA operator will be looking up metrics values by asking the Thanos-querier for them. You may think of it as a proxy to Prometheus.
+Given the inputs of:
 
-The conversation with Thanos must be authenticated, and it is the `TriggerAuthentication` resource that supplies the credentials. Those credentials are the CA cert and token associated with the Thanos service account.
+* an object, such as a Deployment or Statefulset, which can be scaled (line 9)
+* a trigger of type Prometheus that identifies the relevant metric (line 31)
+* and authentication credentials to query metrics (line 35)
 
-```yaml {hl_lines=[4]}
-apiVersion: keda.sh/v1alpha1
-kind: TriggerAuthentication
-metadata:
-  name: keda-trigger-auth-prometheus
-spec:
-  secretTargetRef:
-  - parameter: bearerToken
-    name: thanos-token
-    key: token
-  - parameter: ca
-    name: thanos-token
-    key: ca.crt
-```
+...the operator will use the ScaledObject resource to create and program a `HorizontalPodAutoscaler` that will be triggered by the results of the Prometheus metrics query.
 
-> {{< figure src="/images/openshift-keda-autoscaling-sequence-2.png" link="/images/openshift-keda-autoscaling-sequence-2.png"  caption="Using Prometheus Metrics for KEDA Autoscaling" width="100%">}}
 
-## Understanding Scaled Objects
-
-But what metric will be queried and what will it be used for? That is defined by the `ScaledObject` resource. Given an "object" which can be scaled, the KEDA will use the ScaledObject resource to create and program a HorizontalPodAutoscaler to be controlled by values found for the metrics are interested in.
-
-> :notebook: Notice that the trigger contains a reference on line 35 to the `TriggerAuthentication` defined above.
-
-```yaml {linenos=inline,hl_lines=[34,35]}
+```yaml {linenos=inline,hl_lines=[8,9,31,34,35]}
 apiVersion: keda.sh/v1alpha1
 kind: ScaledObject
 metadata:
   name: scaled-app
 spec:
   scaleTargetRef:
-    api: apps/v1
+    api: apps/v1 
     name: static-app
-    kind: Deployment
-  cooldownPeriod:  200
-  maxReplicaCount: 10
-  minReplicaCount: 1
-  pollingInterval: 30
+    kind: Deployment 
+  cooldownPeriod:  200 
+  maxReplicaCount: 10 
+  minReplicaCount: 1 
+  pollingInterval: 30 
   advanced:
-    restoreToOriginalReplicaCount: false
+    restoreToOriginalReplicaCount: false 
     horizontalPodAutoscalerConfig:
-      behavior:
+      behavior: 
         scaleDown:
           stabilizationWindowSeconds: 300
           policies:
@@ -256,37 +236,77 @@ spec:
             value: 100
             periodSeconds: 15
   triggers:
-    - type: prometheus
+    - type: prometheus 
       metadata:
         namespace: keda-test
         serverAddress: https://thanos-querier.openshift-monitoring.svc.cluster.local:9092
         metricName: http_requests_total
         # 'job' corresponds to the 'app' label value on deployment
         query: sum(rate(http_requests_total{job="prometheus-example-app"}[1m]))
-        threshold: '5'
+        threshold: '5' 
         authModes: "bearer"
       authenticationRef:
         name: keda-trigger-auth-prometheus
 ```
 
+> :notebook: Notice that the trigger contains a reference on line 35 to the `TriggerAuthentication` resource.
+## Understanding Thanos
+
+OpenShift workload monitoring actually introduces a second Prometheus instance distinct from the platform instance, so an intermediary will be used when looking up metrics. This is where Thanos fits in. The CMA or KEDA operator will be looking up metrics values by asking the Thanos-querier for them. You may think of it as a proxy to Prometheus.
+
+The conversation with Thanos must be authenticated, and it is the `TriggerAuthentication` resource that supplies the credentials. Those credentials are the CA cert and token associated with the _thanos_ service account created by our application deployment.
+
+```yaml {hl_lines=[4]}
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: keda-trigger-auth-prometheus
+spec:
+  secretTargetRef: 
+  - parameter: bearerToken 
+    name: thanos-token
+    key: token 
+  - parameter: ca
+    name: thanos-token
+    key: ca.crt
+```
+
+> {{< figure src="/images/openshift-keda-autoscaling-sequence-2.png" link="/images/openshift-keda-autoscaling-sequence-2.png"  caption="Using Prometheus Metrics for KEDA Autoscaling" width="100%">}}
+
+
 # Demo
 
-oc create -f load.yaml
+We have all the pieces on the table, so let's put them together and see an example.
+
+For this demo we won't use the Kafka example mentioned, but we will [increase the load](https://github.com/dlbewley/demo-custom-metric-autoscaling/blob/main/load.yaml) on the "[prometheus-example-app](#enabling-custom-metrics-in-our-application)" which is acting as our metered-app.
+
+As the rate of HTTP hits to the metered-app increase, the HPA will be triggered and cause the "[static-app](#deploying-a-scaled-application)" to scale out.
+
+Below is a graph of the query, defined by the ScaledOjbect, captured during this demo.
+
+{{< figure src="/images/openshift-keda-autoscaling-demo-metric.png" link="/images/openshift-keda-autoscaling-demo-metric.png"  caption="Custom Metric Graph with Load Generator" width="75%">}}
+
+**Demo:** Autoscaling one application based on the metrics of another. (_output has been sped up_)
+> {{< collapsable prompt="📺 ASCII Screencast" collapse=false >}}
+  <p>Scale app "static-app" based on the rate of hits counted in the app "prometheus-example-app"</p>
+  {{< asciinema key="scale-keda-20221102_1548" rows="45" font-size="smaller" poster="npt:2:00" loop=false >}}
+  {{< /collapsable>}}
+
 # Summary
 
 _So, what did we just learn? TL;DR_
 
 * **OpenShift provides platform and workload monitoring out of the box**
 
-  Batteries included. The platform ships with Prometheus configured to comprehensively monitor the platform and graph the results. User workload monitoring is enabled with a flip of the switch.
+  Batteries included. The platform ships with Prometheus configured to comprehensively monitor the platform and graph the results.
 
-* **Developers can add thier own metrics to be monitored**
+* **Developers can add their own metrics to be monitored**
 
   Developers can add the Prometheus client libraries to their application, define a ServiceMonitor, and Prometheus will begin scraping them.
 
-* **Custom metrics can be used in autoscaling triggers**
+* **Custom metrics can be used in auto scaling triggers**
 
-  With the addition of the [CMA operator][5], a ScaledObject can program a Autoscaler to resize an application using knowledge gained from any metric. You are no longer limited to scaling only using CPU and memory thresholds!
+  With the addition of the [OpenShift Custom Metrics Autoscaling operator][5], a ScaledObject can program an Autoscaler to resize an application using any metric. You can now scale your application using intelligent metrics that are important to your business!
 
 # References
 
