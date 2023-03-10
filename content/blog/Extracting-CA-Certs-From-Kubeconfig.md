@@ -7,7 +7,7 @@ tags:
   - kubernetes
   - OCP4
   - openshift
-  - SSL
+  - ssl
 ---
 
 OpenShift creates a number of Certificate Authorities to sign TLS certificates created for functions including load balancing of the API and Ingress services.
