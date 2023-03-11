@@ -10,10 +10,10 @@ tags:
   - ssl
 ---
 
-OpenShift creates a number of Certificate Authorities to sign TLS certificates created for functions including load balancing of the API and Ingress services.
+OpenShift creates a number of Certificate Authorities to sign TLS certificates which secure functions including load balancing of the API and Ingress services.
 Recent versions of openshift-install will place all the CA certificates in the generated `auth/kubeconfig` file. 
 
-Here is how to extract and split and those certificates into individual files.
+Here is how to extract and split those certificates into individual files which eases the process of trusting them particularly on a Mac.
 
 <!--more-->
 
@@ -25,7 +25,7 @@ This script will extract all the certificates associated with the first cluster 
 
 # Example Run
 
-Extract the TLS certs from kubeconfig generated during an OpenShift installation.
+Extract the TLS certs from the kubeconfig generated during an OpenShift installation.
 
 ```bash
 $ export KUBECONFIG=auth/kubeconfig
