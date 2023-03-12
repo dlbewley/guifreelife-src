@@ -98,82 +98,111 @@ oc create -f ${INFRA_ID}-cnv.yaml -n openshift-machine-api
 
 >  📓 **`MachineSet` For Workers With Virtualization**
 > 
->  Notice that line 42 refers to the `Trunk` port group and line 46 refers to the virtual machine template `hub-7vxwj-rhcos-cnv` created above. 
-  ```yaml  {linenos=inline,hl_lines=[9,17,24,28,42,46]}
-  apiVersion: machine.openshift.io/v1beta1
-  kind: MachineSet
-  metadata:
-    annotations:
-      machine.openshift.io/memoryMb: "16384"
-      machine.openshift.io/vCPU: "6"
-    labels:
-      machine.openshift.io/cluster-api-cluster: hub-7vxwj
-    name: hub-7vxwj-cnv
-    namespace: openshift-machine-api
-    resourceVersion: "162348847"
-  spec:
-    replicas: 1
-    selector:
-      matchLabels:
-        machine.openshift.io/cluster-api-cluster: hub-7vxwj
-        machine.openshift.io/cluster-api-machineset: hub-7vxwj-cnv
-    template:
+>  Notice that line 48 refers to the `Trunk` port group and line 35 refers to the virtual machine template `hub-7vxwj-rhcos-cnv` created above.
+```yaml  {linenos=inline,hl_lines=[7,16,23,28,35,48]}
+apiVersion: machine.openshift.io/v1beta1
+kind: MachineSet
+metadata:
+  annotations:
+    machine.openshift.io/memoryMb: '16384'
+    machine.openshift.io/vCPU: '12'
+  name: hub-test-cnv
+  namespace: openshift-machine-api
+  labels:
+    machine.openshift.io/cluster-api-cluster: hub-kmbtb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      machine.openshift.io/cluster-api-cluster: hub-kmbtb
+      machine.openshift.io/cluster-api-machineset: hub-test-cnv
+  template:
+    metadata:
+      labels:
+        machine.openshift.io/cluster-api-cluster: hub-kmbtb
+        machine.openshift.io/cluster-api-machine-role: worker
+        machine.openshift.io/cluster-api-machine-type: worker
+        machine.openshift.io/cluster-api-machineset: hub-test-cnv
+    spec:
+      lifecycleHooks: {}
       metadata:
         labels:
-          machine.openshift.io/cluster-api-cluster: hub-7vxwj
-          machine.openshift.io/cluster-api-machine-role: worker
-          machine.openshift.io/cluster-api-machine-type: worker
-          machine.openshift.io/cluster-api-machineset: hub-7vxwj-cnv
-      spec:
-        metadata:
-          labels:
-            machine.openshift.io/cluster-api-machineset: hub-7vxwj-cnv
-        providerSpec:
-          value:
-            apiVersion: vsphereprovider.openshift.io/v1beta1
-            credentialsSecret:
-              name: vsphere-cloud-credentials
-            diskGiB: 90
-            kind: VSphereMachineProviderSpec
-            memoryMiB: 16384
-            metadata:
-              creationTimestamp: null
-            network:
-              devices:
+          machine.openshift.io/cluster-api-machineset: hub-test-cnv
+      providerSpec:
+        value:
+          apiVersion: machine.openshift.io/v1beta1
+          kind: VSphereMachineProviderSpec
+          metadata:
+            creationTimestamp: null
+          template: hub-kmbtb-rhcos-cnv
+          numCPUs: 12
+          numCoresPerSocket: 1
+          memoryMiB: 16384
+          diskGiB: 90
+          snapshot: ''
+          userDataSecret:
+            name: worker-user-data
+          credentialsSecret:
+            name: vsphere-cloud-credentials
+          network:
+            devices:
               - networkName: lab-192-168-4-0-b24
               - networkName: Trunk
-            numCPUs: 6
-            numCoresPerSocket: 1
-            snapshot: ""
-            template: hub-7vxwj-rhcos-cnv
-            userDataSecret:
-              name: worker-user-data
-            workspace:
-              datacenter: Garden
-              datastore: VMData-HD
-              folder: /Garden/vm/hub-7vxwj
-              resourcePool: /Garden/host/Goat/Resources
-              server: vcenter.lab.bewley.net
+          workspace:
+            datacenter: Garden
+            datastore: VMData-HD
+            folder: /Garden/vm/hub-kmbtb
+            resourcePool: /Garden/host/Goat/Resources
+            server: vcenter.lab.bewley.net
   ```
 
 # Configuring OpenShift Virtualization Networking
 
+**Install NMState Operator** using the web UI or GitOps and [this repo](https://github.com/redhat-cop/gitops-catalog/tree/main/nmstate)
+
+Once installed, create a `NMState` resource and more _nmstat.io_ APIs will become available.
+
+```bash
+$ oc api-resources | grep -i nmstate
+nmstateconfigs                                agent-install.openshift.io/v1beta1    true     NMStateConfig
+nmstates                                      nmstate.io/v1                         false    NMState
+
+$ cat <<EOF | oc create -f -
+apiVersion: nmstate.io/v1beta1
+kind: NMState
+metadata:
+  name: nmstate
+spec:
+  nodeSelector:
+    beta.kubernetes.io/arch: amd64
+EOF
+
+$ oc api-resources |grep -i nmstate
+nmstateconfigs                                agent-install.openshift.io/v1beta1    true     NMStateConfig
+nmstates                                      nmstate.io/v1                         false    NMState
+nodenetworkconfigurationenactments    nnce    nmstate.io/v1beta1                    false    NodeNetworkConfigurationEnactment
+nodenetworkconfigurationpolicies      nncp    nmstate.io/v1                         false    NodeNetworkConfigurationPolicy
+nodenetworkstates                     nns     nmstate.io/v1beta1                    false    NodeNetworkState
+```
+
+
 **Install OpenShift Virtualization** using the web UI or GitOps and [this repo](https://github.com/redhat-cop/gitops-catalog/tree/main/virtualization-operator).
 
-Once installed and a `Hyperconverged` resource has been created, the _nmstate.io_ API group will become available.
+Once installed create a `Hyperconverged` resource.
 
 > :notebook: **[nmstate.io][3] API Group Resources** for node network configuration
   ```shell
   $ oc api-resources --api-group nmstate.io
   NAME                                 SHORTNAMES   APIVERSION           NAMESPACED   KIND
+  nmstates                                          nmstate.io/v1        false        NMState
   nodenetworkconfigurationenactments   nnce         nmstate.io/v1beta1   false        NodeNetworkConfigurationEnactment
-  nodenetworkconfigurationpolicies     nncp         nmstate.io/v1beta1   false        NodeNetworkConfigurationPolicy
+  nodenetworkconfigurationpolicies     nncp         nmstate.io/v1        false        NodeNetworkConfigurationPolicy
   nodenetworkstates                    nns          nmstate.io/v1beta1   false        NodeNetworkState
   ```
 
 ## Creating a Node Network Configuration Policy
 
-If we want to use all the VLANs we are trunking to a node, we need to tell OpenShift how to configure NIC for all those networks.
+If we want to use all the VLANs we are trunking to a node, we need to tell OpenShift how to configure the NIC for all those networks.
 Using resources from the [NMState API][3] we can configure the networking in the node operating system.
 
 Create a `NodeNetworkConfigurationPolicy` that will be used to configure the 2nd NIC for us in a way that will present each VLAN as a bridge.
