@@ -99,7 +99,7 @@ oc create -f ${INFRA_ID}-cnv.yaml -n openshift-machine-api
 >  📓 **`MachineSet` For Workers With Virtualization**
 > 
 >  Notice that line 48 refers to the `Trunk` port group and line 35 refers to the virtual machine template `hub-7vxwj-rhcos-cnv` created above.
-  ```yaml  {linenos=inline,hl_lines=[7,16,23,28,35,48]}
+```yaml  {linenos=inline,hl_lines=[7,16,23,28,35,48]}
 apiVersion: machine.openshift.io/v1beta1
 kind: MachineSet
 metadata:
