@@ -2,8 +2,21 @@
 <meta name="robots" content="all,follow">
 <meta name="googlebot" content="index,follow,snippet,archive">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>
+  {{- if .IsHome -}}
+  Home | {{ .Site.Title }}
+  {{- else if .Params.hide_site_title -}}
+  {{ .Page.Title }}
+  {{- else if .Page.Title -}}
+  {{ .Page.Title }} | {{ .Site.Title }}
+  {{- else -}}
+  {{ .Site.Title }}
+  {{- end -}}
+</title>
+<!--
 {{ $title_plain := .Title | markdownify | plainify }}
 <title>{{ $title_plain }}</title>
+-->
 <meta name="author" content="{{ .Param "author" }}" />
 {{ $keywords := .Site.Params.defaultKeywords | default (slice "" | first 0) }}
 {{ if isset .Params "tags" }}{{ range .Params.tags }}{{ $keywords = $keywords | append . }}{{ end }}{{ end }}
