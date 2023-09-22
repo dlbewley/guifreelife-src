@@ -1,13 +1,12 @@
 ---
 title: Storing OpenShift Credentials with 1Password
-date: 2023-06-09
+date: 2023-09-22
 layout: post
 banner: /img/banners/mushroom-moss.jpg
 tags:
  - openshift
  - OCP4
  - security
- - draft
 description: How to securely manage credentials for multiple Kubernets clusters using 1Password
 ---
 
@@ -17,12 +16,12 @@ If you find yourself frequently rebuilding OpenShift clusters and potentially re
 
 # What's in a Kubeconfig?
 
-When you interact with a kubernetes cluster the `kubectl` or `oc` client will read and store configuration details in a file affectionately known as "kubeconfig" located at `$HOME/.kube/config`. This file contains the CA certificates or `certificate-authority-data` used to validate communication with a cluster. The file also keeps track of the usernames and namespaces you interact with. The combination of those items forms what is known as a "context", but we can ignore that today.
+When you interact with a kubernetes cluster the `kubectl` or `oc` client will read and store configuration details in a file affectionately known as "kubeconfig" located at `$HOME/.kube/config`. This file contains the CA certificates or `certificate-authority-data` used to validate communication with a cluster. The file also keeps track of the usernames and namespaces you interact with. The combination of those items forms what is known as a "context", but we can ignore that concept today.
 
 > :star: **Pro Tip:**
 > See [this post][1] for details on extracting the certificate data from a kubeconfig to enable your operating system and web browser to trust your cluster.
 
-During installation, OpenShift will create an _admin_ user and a _kuebadmin_ user. The _admin_ user `client-certificate-data` and `client-key-data` are stored in the kubeconfig to enable passwordless authentication.
+During installation, OpenShift will create a system _admin_ user and a _kuebadmin_ user. The _admin_ user `client-certificate-data` and `client-key-data` are stored in the kubeconfig to enable passwordless authentication.
 
 > :notebook: Example kubeconfig file
 ```yaml
@@ -48,7 +47,7 @@ contexts:
 
 The _kubeadmin_ user authenticates with a password, which is not available in the kubeconfig. As a best practice this kubeadmin user is removed, but having the kubeadmin password readily available along side the kubeconfig can be very helpful.
 
-It is important that a kubeconfig can be easily updated or replaced, because if the CA certificates are renewed or if you rebuild the cluster the `certificate-authority-data` will be out of date, and the kubeconfig will no longer be able to verify the connection. For this reason, I maintain distinct kubeconfig for each cluster I interact with. This is easily done by overidding the file location with the `KUBECONFIG` environment variable. 
+It is important that a kubeconfig can be easily updated or replaced, because if the CA certificates are renewed or if you rebuild the cluster the `certificate-authority-data` will be out of date, and the kubeconfig will no longer be able to verify the connection. For this reason, I maintain a distinct kubeconfig for each cluster I interact with. This is easily done by overidding the file location with the `KUBECONFIG` environment variable. 
 
 _So, how can you quickly and easily get your kubeconfig and kubeadmin credentials stored in 1Password?_
 
@@ -64,7 +63,7 @@ Start by pointing to the kubeconfig to be saved.
 export KUBECONFIG=install-dir/auth/kubeconfig
 ```
 
-The script will upload that file and look for a `kubeadmin-password` file in the same directory and it will login to the cluster to gather some other information such as the console URL, the cluster id, and creation date.
+The script will upload that file and look for a `kubeadmin-password` file in the same directory and upload that. The script will also login to the cluster to gather some other information such as the console URL, the cluster id, and creation date.
 
 > :notebook: _There's a bug here. When updating an existing entry. The kubeadmin password will be repeated. Do you know why?_
 
