@@ -102,7 +102,7 @@ $ oc whoami
 system:admin
 ```
 
-Now you can "kube" to your :hearts: conent!
+Now you can "kube" to your :hearts: content!
 
 If you dedeploy the cluster, just remove the file from `~/.kube/ocp/<cluster>/kubeconfig` and repeat above to update 1Password and write out a new kubeconfig.
 # Possible Improvements
