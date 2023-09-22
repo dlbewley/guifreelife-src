@@ -104,7 +104,8 @@ system:admin
 
 Now you can "kube" to your :hearts: content!
 
-If you dedeploy the cluster, just remove the file from `~/.kube/ocp/<cluster>/kubeconfig` and repeat above to update 1Password and write out a new kubeconfig.
+If you redeploy the cluster, just remove the file from `~/.kube/ocp/<cluster>/kubeconfig` and repeat above to update 1Password and write out a new kubeconfig.
+
 # Possible Improvements
 
 There are other tools for managing kubernetes contexts but those seem to stem from putting too much information in one kubeconfig. I find this solution to be adequate for my needs.
