@@ -16,7 +16,7 @@ If you find yourself frequently rebuilding OpenShift clusters and potentially re
 
 # What's in a Kubeconfig?
 
-When you interact with a kubernetes cluster the `kubectl` or `oc` client will read and store configuration details in a file affectionately known as "kubeconfig" located at `$HOME/.kube/config`. This file contains the CA certificates or `certificate-authority-data` used to validate communication with a cluster. The file also keeps track of the usernames and namespaces you interact with. The combination of those items forms what is known as a "context", but we can ignore that concept today.
+When you interact with a kubernetes cluster the `kubectl` or `oc` client will read and store configuration details in a file affectionately known as "kubeconfig" located at `$HOME/.kube/config`. This file contains the CA certificates or `certificate-authority-data` used to validate communication with a cluster. The file also keeps track of the usernames and namespaces you interact with. The combination of those items forms what is known as a "context".
 
 > :star: **Pro Tip:**
 > See [this post][1] for details on extracting the certificate data from a kubeconfig to enable your operating system and web browser to trust your cluster.
@@ -68,6 +68,10 @@ The script will upload that file and look for a `kubeadmin-password` file in the
 > :notebook: _There's a bug here. When updating an existing entry. The kubeadmin password will be repeated. Do you know why?_
 
 {{< gist dlbewley 3a862af8c68b03d7477ed847261345a7 ocp21p >}}
+
+Here is an example vault entry created by the script.
+
+{{< figure src="/images/ocp21p-1password.png" link="/images/ocp21p-1password.png"  caption="1Password Vault Entry" width="50%">}}
 
 # Reading Kubernetes Credentials from 1Password
 
