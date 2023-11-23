@@ -11,6 +11,7 @@ tags:
  - RHACS
  - webinar
 notes_url: https://docs.google.com/document/d/1xvXiDdRqrWoma5Zb52H3YRkT0wCNpVj3Oj_8FX6X4FE/edit#
+description: Demo of Red Hat Advanced Cluster Management management of AWS EKS and the automated deployment of Red Hat Advanced Cluster Security by policy.
 ---
 
 Whether workloads are in the datacenter, in the cloud, or even in multiple clouds, OpenShift provides a consistent experience. And the Hybrid Cloud Console is your entry point for Red Hat cloud services to enable the most effective use of each environment. This video demo walks through the provisioning of [ROSA][18] and using Red Hat Advanced Cluster Management with EKS. Finally, [RHACM][2] policies are deployed to ensure automatic application of Red Hat Advanced Cluster Security.

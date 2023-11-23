@@ -85,7 +85,7 @@ paginate = 10
     author = "Dale Bewley"
     defaultKeywords = ["bewley", "guifreelife"]
     mainSections = ["blog"]
-    defaultDescription = "GUI Free Life"
+    defaultDescription = "GUI Free Life, by Dale Bewley covers Kubernetes, Linux, Networking, OpenShift and more"
     # enable page tables of contents
     toc = true
 
@@ -186,6 +186,7 @@ paginate = 10
     #subtitle = "We have prepared for you more than 40 different HTML pages, including 5 variations of homepage."
     link_url = "http://guifreelife.com"
     link_text = "GUI Free Life"
+
 
 [params.clients]
     enable = false

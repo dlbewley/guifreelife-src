@@ -8,6 +8,7 @@ tags:
  - openshift
  - OCP4
  - virtualization
+description: How to use OpenShift Virtualization on vSphere with nested virtualization and access enterprise networks.
 ---
 
 OpenShift Virtualization builds upon [KubeVirt][2] to provide a container native home for your virtual machine workloads. While bare metal is the only officially support platform today, this post will walk through enabling OpenShift Virtualization on vSphere in a lab environment. With nested virtualization you'll be able to spin up containerized VMs bridged to your physical networks.

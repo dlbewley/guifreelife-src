@@ -10,6 +10,7 @@ tags:
  - operators
  - debugging
 banner-credits: https://library.techsmith.com/camtasia/assets/asset/seg/1825355300_2e0192bb-1246-41e2-8801-2e8beaff3a0f
+description: How to debug authentication and authorization of OpenShift pods which use fine grained AWS IAM roles in combination with AWS STS, secure token service.
 ---
 
 OpenShift supports granular AWS permissions for pods running cluster operators or even user applications. This enhances security by providing only the necessary privileges and nothing more. This post explores debugging authN and authZ of pods attempting to use fine grained IAM roles in combination with AWS secure token service.

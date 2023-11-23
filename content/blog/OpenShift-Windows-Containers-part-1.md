@@ -10,6 +10,7 @@ tags:
  - OCP4
  - openshift
  - windows
+description: Preparing an OpenShift cluster on Azure to host Windows Kuberenetes nodes.
 ---
 
 Adding support for Windows nodes in your OpenShift cluster is a day 2 operation that requires preparation at install time.

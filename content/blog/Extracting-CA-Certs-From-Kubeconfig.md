@@ -8,6 +8,7 @@ tags:
   - OCP4
   - openshift
   - ssl
+description: How to extract and split the CA certificates into individual files from an OpenShift kubeconfig.
 ---
 
 OpenShift creates a number of Certificate Authorities to sign TLS certificates which secure functions including load balancing of the API and Ingress services.

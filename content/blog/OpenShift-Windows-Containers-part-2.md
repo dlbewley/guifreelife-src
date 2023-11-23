@@ -9,6 +9,7 @@ tags:
  - OCP4
  - operators
  - windows
+description: Preparing an OpenShift cluster on Azure to host Windows Kuberenetes nodes.
 ---
 
 The Windows Machine Config Operator builds and configures Windows machines to act as nodes in an OpenShift cluster enabling cross platform workloads. This post will demonstrate the addition of a Windows node to an existing cluster and explore the integration of Windows and Kubernetes.
