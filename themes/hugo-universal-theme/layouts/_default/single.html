@@ -46,6 +46,10 @@
                         <div id="post-content">
                           {{ .Content }}
                         </div>
+                        <!-- Add mermaid min js file -->
+                        {{ if (.Params.mermaid) }}
+                        {{ partial "mermaid.html" }}
+                        {{ end }}
                         <!-- /#post-content -->
                         {{ if .Site.DisqusShortname }}
                         <div id="comments">

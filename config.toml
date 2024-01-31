@@ -141,6 +141,16 @@ paginate = 10
 [Permalinks]
     blog = "/blog/:year/:month/:day/:filename/"
 
+[params.mermaid]
+    theme = "base"
+    align = "center"
+# Available Themes
+# default - This is the default theme for all diagrams.
+# neutral - This theme is great for black and white documents that will be printed.
+# dark - This theme goes well with dark-colored elements or dark-mode.
+# forest - This theme contains shades of green.
+# base - This is the only theme that can be modified. Use this theme as the base for customizations.
+
 # Enable or disable top bar with social icons
 [params.topbar]
     enable = true
@@ -232,3 +242,4 @@ paginate = 10
       rouge-style = "github"
 #      includedir = include
 #      experimental = true
+
