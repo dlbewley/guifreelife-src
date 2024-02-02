@@ -24,6 +24,7 @@ Red Hat Advanced Cluster Management for Kubernetes implements the [Open Cluster 
 
 `Policy` resources are used to enact policies on a managed cluster. There is a large [collection of policies][5] that you can draw upon and customize to your use. This post focused only on the process of associating a policy with a cluster rather than what is in a given policy or how it is enacted.
 
+> {{< collapsable prompt="📺 **API Resources** `policy.open-cluster-management.io`" collapse=false md=true >}}
 ```bash {hl_lines=[7]}
 $ oc api-resources --api-group policy.open-cluster-management.io
 NAME                    SHORTNAMES   APIVERSION                                  NAMESPACED   KIND
@@ -35,12 +36,30 @@ policies                plc          policy.open-cluster-management.io/v1       
 policyautomations       plca         policy.open-cluster-management.io/v1beta1   true         PolicyAutomation
 policysets              plcset       policy.open-cluster-management.io/v1beta1   true         PolicySet
 ```
+{{< /collapsable >}}
 
-Policies are namespace scoped as you can see in the table above. Policies can be associated to specific clusters in a fleet through a `Placement` or a `PlacementRule` resource.
+
+Policies are scoped to a namespace as you can see in the API resources table above. Policies can be associated to specific clusters in a fleet through a `Placement` or a `PlacementRule` resource.
 
 # Placement Rules
 
-In the recent past resources called `PlacementRule` and `PlacementRuleBindings` were used to associate a policy with a cluster. Those resources still exist but are now deprecated in favor of the `Placement` and `PlacementBinding` resources. These new resources enable greater control, but bring with them some other resources that need to be understood. Let's step through them, but first a little context.
+In the recent past resources called `PlacementRule` and `PlacementRuleBindings` were used to associate a policy with a cluster. Those resources still exist but are now deprecated in favor of the `Placement` and `PlacementBinding` resources. These new resources enable greater control, but bring with them some other resources that exist to group clusters together into sets.
+
+> {{< collapsable prompt="📺 **API Resources** `apps.open-cluster-management.io`" collapse=true md=true >}}
+```bash {hl_lines=[8]}
+$ oc api-resources --api-group apps.open-cluster-management.io
+NAME                                SHORTNAMES                   APIVERSION                                 NAMESPACED   KIND
+channels                                                         apps.open-cluster-management.io/v1         true         Channel
+deployables                                                      apps.open-cluster-management.io/v1         true         Deployable
+gitopsclusters                                                   apps.open-cluster-management.io/v1beta1    true         GitOpsCluster
+helmreleases                                                     apps.open-cluster-management.io/v1         true         HelmRelease
+multiclusterapplicationsetreports   appsetreport,appsetreports   apps.open-cluster-management.io/v1alpha1   true         MulticlusterApplicationSetReport
+placementrules                                                   apps.open-cluster-management.io/v1         true         PlacementRule
+subscriptionreports                 appsubreport                 apps.open-cluster-management.io/v1alpha1   true         SubscriptionReport
+subscriptions                       appsub                       apps.open-cluster-management.io/v1         true         Subscription
+subscriptionstatuses                appsubstatus                 apps.open-cluster-management.io/v1alpha1   true         SubscriptionStatus
+```
+{{< /collapsable >}}
 
 # Managed Clusters and Managed Cluster Sets
 
@@ -60,6 +79,7 @@ clear
 oc get managedclustersetbindings global -n open-cluster-management-global-set -o yaml | yq
  -->
 
+> {{< collapsable prompt="📺 **API Resources** `cluster.open-cluster-management.io`" collapse=true md=true >}}
 ```bash {hl_lines=[7]}
 $ oc api-resources --api-group cluster.open-cluster-management.io
 NAME                        SHORTNAMES                     APIVERSION                                    NAMESPACED   KIND
@@ -74,8 +94,9 @@ placementdecisions                                         cluster.open-cluster-
 placements                                                 cluster.open-cluster-management.io/v1beta1    true         Placement
 restores                    crst                           cluster.open-cluster-management.io/v1beta1    true         Restore
 ```
+{{< /collapsable >}}
 
-Multiple managed clusters may be grouped together into `ManagedClusterSets` for administrative and RBAC purposes. RHACM has two pre-defined cluster sets named _Global_ and _Default_, but you might create a cluster set for lifecycle like _Dev_ or cloud like _AWS_ for example. All clusters will be in the Global set, and they can be added to at most only one other set.
+Multiple managed clusters may be grouped together into `ManagedClusterSets` for administrative and RBAC purposes. RHACM has two pre-defined cluster sets named _Global_ and _Default_. All clusters will be in the Global set, and they can be added to at most only one other set. You might create a cluster set for lifecycle like _Dev_ or cloud like _AWS_ for example.
 
 ## Managed Cluster Set Bindings
 
@@ -85,7 +106,7 @@ The Global managed cluserset set is already bound to the `open-cluster-managemen
 
 {{< figure src="/images/placement-managedclustersetbindings.png" link="/images/placement-managedclustersetbindings.png"  caption="Cluster sets and Namespace bindings view" width="100%">}}
 
-> {{< collapsable prompt="📺 ASCII Screencast" collapse=true >}}
+> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=true >}}
   <p>Viewing ManagedClusterSet resources</p>
   {{< asciinema key="placement-mcsb-hub-lab-bewley-net-20240201_1044" rows="25" font-size="smaller" poster="npt:0:06" loop=true >}}
   {{</collapsable>}}
@@ -111,9 +132,9 @@ The placement decision begins with a list of managed clusters visibile through t
 4. Namespace-scoped `Placements` specify a _slice_ of `ManagedClusterSets` which select a working set of _potential_ `ManagedClusters`
 5. Then `Placements` _subselect_ from that working set using label/claim selection.
   
-## Filtering Cluster Sets
+## Subselecting from Cluster Sets with Predicates
 
-A placement can explicitely list the ClusterSets of interest or it can simply list the cluster label selectors. BUT the universe of possible clusters is constrained to those bound to the namespace via the [managed cluster set bindings]({{< ref "#managedclustersetbindings" >}}).
+A placement can explicitly list the ClusterSets of interest or it can simply list the cluster label selectors. BUT the universe of possible clusters is constrained to those bound to the namespace via the [managed cluster set bindings]({{< ref "#managedclustersetbindings" >}}).
 
 Here are examples of both use cases. Of course they may also be combined into one.
 
@@ -147,15 +168,15 @@ spec:
           - {key: environment, operator: In, values: ["dev"]}
 ```
 
-Refer to the [documentation][3] for more detail.
+When more than one predicate is defined, they are OR'ed.  Refer to the [documentation][3] for more detail.
 
 # Placement Binding
 
-Now we have seen how a placement produces a list of interesting clusters, but we still have to allocate the policies. This is the job of the `PlacementBinding`
+Once a placement produces a list of managed clusters the application or policy resource must be associated and ultimately propagated to the cluster. This is the job of the `PlacementBinding`
 
-> :notebook:  A `PlacementBinding` binds a `Placement` to subjects (eg. `Policies`, `PolicySets`)
+> :notebook:  A `PlacementBinding` binds a `Placement` to subjects (eg. `Policies`, `PolicySets`, `ApplicationSets`)
 
-This example is pulled from [documentation sample][1].
+This example is pulled from a [documentation sample][1].
 
 ```yaml
 apiVersion: policy.open-cluster-management.io/v1
