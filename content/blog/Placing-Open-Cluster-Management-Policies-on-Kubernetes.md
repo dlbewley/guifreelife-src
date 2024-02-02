@@ -4,6 +4,7 @@ date: 2024-01-30
 banner: '/images/DALL·E 2024-01-30 14.28.24 - A whimsical scene featuring a traffic cop standing on a cloud, energetically directing a chaotic stream of various floating documents - papers, folder.png'
 layout: post
 mermaid: true
+asciinema: true
 tags:
   - RHACM
   - openshift
@@ -15,15 +16,49 @@ description: Red Hat Advanced Cluster Management enables Open Cluster Management
 
 <!--more-->
 
-# PlacementRules
+# Open Cluster Management
+
+Red Hat Advanced Cluster Management for Kubernetes implements the [Open Cluster Management][6] APIs for the deployment (placement) of both application resourcess and governance policies. 
+
+## Policies
+
+`Policy` resources are used to enact policies on a managed cluster. There is a large [collection of policies][5] that you can draw upon and customize to your use. This post focused only on the process of associating a policy with a cluster rather than what is in a given policy or how it is enacted.
+
+```bash {hl_lines=[7]}
+$ oc api-resources --api-group policy.open-cluster-management.io
+NAME                    SHORTNAMES   APIVERSION                                  NAMESPACED   KIND
+certificatepolicies                  policy.open-cluster-management.io/v1        true         CertificatePolicy
+configurationpolicies                policy.open-cluster-management.io/v1        true         ConfigurationPolicy
+iampolicies                          policy.open-cluster-management.io/v1        true         IamPolicy
+placementbindings       pb           policy.open-cluster-management.io/v1        true         PlacementBinding
+policies                plc          policy.open-cluster-management.io/v1        true         Policy
+policyautomations       plca         policy.open-cluster-management.io/v1beta1   true         PolicyAutomation
+policysets              plcset       policy.open-cluster-management.io/v1beta1   true         PolicySet
+```
+
+Policies are namespace scoped as you can see in the table above. Policies can be associated to specific clusters in a fleet through a `Placement` or a `PlacementRule` resource.
+
+# Placement Rules
 
 In the recent past resources called `PlacementRule` and `PlacementRuleBindings` were used to associate a policy with a cluster. Those resources still exist but are now deprecated in favor of the `Placement` and `PlacementBinding` resources. These new resources enable greater control, but bring with them some other resources that need to be understood. Let's step through them, but first a little context.
 
-# ManagedClusters
+# Managed Clusters and Managed Cluster Sets
 
 RHACM can manage OpenShift and other Kubernetes clusters. See my previous [posts on RHACM]({{< ref "/tags/RHACM" >}}) for more background and recorded demonstrations.
 
 Each  Kubernetes cluster managed by RHACM is represented by a `ManagedCluster` resource. This resource is cluster scoped. You can see this in the table below.
+
+<!-- 
+Demo Script:
+
+oc api-resources --api-group cluster.open-cluster-management.io
+
+oc get managedclustersets -A
+oc get managedclustersetbindings -A
+clear
+
+oc get managedclustersetbindings global -n open-cluster-management-global-set -o yaml | yq
+ -->
 
 ```bash {hl_lines=[7]}
 $ oc api-resources --api-group cluster.open-cluster-management.io
@@ -40,29 +75,21 @@ placements                                                 cluster.open-cluster-
 restores                    crst                           cluster.open-cluster-management.io/v1beta1    true         Restore
 ```
 
-Multiple managed clusters may be grouped together into `ManagedClusterSets` for administrative and RBAC purposes. RHACM has two pre-defined cluster sets named _Global_ and _Default_, but you might create a cluster set for lifecycle like _Dev_ or cloud like _AWS_ for example.
+Multiple managed clusters may be grouped together into `ManagedClusterSets` for administrative and RBAC purposes. RHACM has two pre-defined cluster sets named _Global_ and _Default_, but you might create a cluster set for lifecycle like _Dev_ or cloud like _AWS_ for example. All clusters will be in the Global set, and they can be added to at most only one other set.
 
-# Policies
-
-`Policy` resources are used to enact policies on a managed cluster. There is a large [collection of policies][5] that you can draw upon, but we are staying focused on the process of associating a policy with a cluster rather than what is in a given policy or how it is enacted.
-
-```bash {hl_lines=[7]}
-$ oc api-resources --api-group policy.open-cluster-management.io
-NAME                    SHORTNAMES   APIVERSION                                  NAMESPACED   KIND
-certificatepolicies                  policy.open-cluster-management.io/v1        true         CertificatePolicy
-configurationpolicies                policy.open-cluster-management.io/v1        true         ConfigurationPolicy
-iampolicies                          policy.open-cluster-management.io/v1        true         IamPolicy
-placementbindings       pb           policy.open-cluster-management.io/v1        true         PlacementBinding
-policies                plc          policy.open-cluster-management.io/v1        true         Policy
-policyautomations       plca         policy.open-cluster-management.io/v1beta1   true         PolicyAutomation
-policysets              plcset       policy.open-cluster-management.io/v1beta1   true         PolicySet
-```
-
-Policies are namespace scoped as you can see in the table above. Policies can be applied to clusters through a `Placement` but this is mediated by a `ManagedClusterSetBinding`, so let's look at that.
-
-# ManagedClusterSetBindings
+## Managed Cluster Set Bindings
 
 A `ManagedClusterSetBinding` is a namespaced resource designed to create a relationship between a namespace and a `ManagedClusterSet`. This resource is prerequisite to a `Placement`. Without this, a placement has no clusters visible to match against.
+
+The Global managed cluserset set is already bound to the `open-cluster-management-global-set` by default. You can see this in the console when listing the cluster sets.
+
+{{< figure src="/images/placement-managedclustersetbindings.png" link="/images/placement-managedclustersetbindings.png"  caption="Cluster sets and Namespace bindings view" width="100%">}}
+
+> {{< collapsable prompt="📺 ASCII Screencast" collapse=true >}}
+  <p>Viewing ManagedClusterSet resources</p>
+  {{< asciinema key="placement-mcsb-hub-lab-bewley-net-20240201_1044" rows="25" font-size="smaller" poster="npt:0:06" loop=true >}}
+  {{</collapsable>}}
+
 
 # Placement
 
@@ -122,7 +149,7 @@ spec:
 
 Refer to the [documentation][3] for more detail.
 
-# PlacementBinding
+# Placement Binding
 
 Now we have seen how a placement produces a list of interesting clusters, but we still have to allocate the policies. This is the job of the `PlacementBinding`
 
@@ -206,6 +233,7 @@ end
 * [Red Hat Advanced Cluster Management for Kubernetes][4]
 * [Placement Introduction][2]
 * [Collection of policy examples for Open Cluster Management][5]
+* [Open Cluster Management][6]
 
 
 [1]: https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.9/html/governance/governance#policy-sample-file "Policy Sample File"
@@ -213,3 +241,4 @@ end
 [3]: <https://access.redhat.com/documentation/en-us/red_hat_advanced_cluster_management_for_kubernetes/2.9/html/clusters/cluster_mce_overview#placement-labelselector-claimSelector> "Filtering ManagedClusters from ManagedClusterSets"
 [4]: https://access.redhat.com/products/red-hat-advanced-cluster-management-for-kubernetes/ "RHACM"
 [5]: <https://github.com/stolostron/policy-collection> "stolostron / policy-collection"
+[6]: <https://open-cluster-management.io/> "Open Cluster Management"
