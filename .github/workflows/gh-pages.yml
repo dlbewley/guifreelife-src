@@ -40,7 +40,7 @@ jobs:
           allow_empty_commit: false
           cname: guifreelife.com
           commit_message: ${{ github.event.head_commit.message }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
           external_repository: dlbewley/dlbewley.github.io
           publish_dir: ./public
           publish_branch: master
