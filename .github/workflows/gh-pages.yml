@@ -36,7 +36,6 @@ jobs:
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
-        env:
         with:
           allow_empty_commit: false
           cname: guifreelife.com
