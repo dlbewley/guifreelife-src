@@ -1,6 +1,6 @@
 ---
 title: "Using Placements to Apply Open Cluster Management Policies to Kubernetes Clusters"
-date: 2024-01-30
+date: 2024-03-11
 banner: '/images/DALL·E 2024-01-30 14.28.24 - A whimsical scene featuring a traffic cop standing on a cloud, energetically directing a chaotic stream of various floating documents - papers, folder.png'
 layout: post
 mermaid: true
@@ -18,11 +18,11 @@ description: Red Hat Advanced Cluster Management enables Open Cluster Management
 
 # Open Cluster Management
 
-Red Hat Advanced Cluster Management for Kubernetes implements the [Open Cluster Management][6] APIs for the deployment (placement) of both application resourcess and governance policies. 
+Red Hat Advanced Cluster Management for Kubernetes implements the [Open Cluster Management][6] APIs for the deployment (placement) of governance policies.
 
 ## Policies
 
-`Policy` resources are used to enact policies on a managed cluster. There is a large [collection of policies][5] that you can draw upon and customize to your use. This post focused only on the process of associating a policy with a cluster rather than what is in a given policy or how it is enacted.
+`Policy` resources are used to enact policies on a managed cluster. There is a large [collection of policies][5] that you can draw upon and customize for your particular use cases. This post focused only on the process of associating a policy with a cluster rather than what is in a given policy or how it is enacted.
 
 > {{< collapsable prompt="📺 **API Resources** `policy.open-cluster-management.io`" collapse=false md=true >}}
 ```bash {hl_lines=[7]}
@@ -43,7 +43,7 @@ Policies are scoped to a namespace as you can see in the API resources table abo
 
 # Placement Rules
 
-In the recent past resources called `PlacementRule` and `PlacementRuleBindings` were used to associate a policy with a cluster. Those resources still exist but are now deprecated in favor of the `Placement` and `PlacementBinding` resources. These new resources enable greater control, but bring with them some other resources that exist to group clusters together into sets.
+In the recent past resources called `PlacementRule` and `PlacementBindings` were used to associate a policy with a cluster. Those resources still exist but are `PlacementRule` is now deprecated in favor of the `Placement` resource. This change enables greater control, and brings with it some other resources to facilitate the grouping of clusters together into sets. These cluster sets enable more configurable RBAC.
 
 > {{< collapsable prompt="📺 **API Resources** `apps.open-cluster-management.io`" collapse=true md=true >}}
 ```bash {hl_lines=[8]}
@@ -67,7 +67,7 @@ RHACM can manage OpenShift and other Kubernetes clusters. See my previous [posts
 
 Each  Kubernetes cluster managed by RHACM is represented by a `ManagedCluster` resource. This resource is cluster scoped. You can see this in the table below.
 
-<!-- 
+<!--
 Demo Script:
 
 oc api-resources --api-group cluster.open-cluster-management.io
@@ -104,6 +104,8 @@ A `ManagedClusterSetBinding` is a namespaced resource designed to create a relat
 
 The Global managed cluserset set is already bound to the `open-cluster-management-global-set` by default. You can see this in the console when listing the cluster sets.
 
+ <!-- if you want "Placement" to act the same way as "PlacementRule", you can create the policy, placement, and placement binding in the "open-cluster-management-global-set" since all clusters are bound to that namespace. -->
+
 {{< figure src="/images/placement-managedclustersetbindings.png" link="/images/placement-managedclustersetbindings.png"  caption="Cluster sets and Namespace bindings view" width="100%">}}
 
 > {{< collapsable prompt="📺 **ASCII Screencast**" collapse=true >}}
@@ -125,13 +127,13 @@ The placement decision begins with a list of managed clusters visibile through t
 > ⭐ **Pro Tip** Use `oc explain placement` to find the information I reformatted below.
 
 **Here is how the placement policy combines with other selection methods to determine a matching list of ManagedClusters:**
- 
+
 1. Kubernetes clusters are registered with hub as cluster-scoped `ManagedClusters`
 2. `ManagedClusters` are organized into cluster-scoped `ManagedClusterSets`
-3. `ManagedClusterSets` are bound to workload namespaces
+3. `ManagedClusterSets` are bound to workload namespaces using `ManagedClusterSetBindings`
 4. Namespace-scoped `Placements` specify a _slice_ of `ManagedClusterSets` which select a working set of _potential_ `ManagedClusters`
 5. Then `Placements` _subselect_ from that working set using label/claim selection.
-  
+
 ## Subselecting from Cluster Sets with Predicates
 
 A placement can explicitly list the ClusterSets of interest or it can simply list the cluster label selectors. BUT the universe of possible clusters is constrained to those bound to the namespace via the [managed cluster set bindings]({{< ref "#managedclustersetbindings" >}}).
@@ -152,7 +154,7 @@ spec:
     - clusterset2
 ```
 
-> :two: If a `Placement` does not specify any `spec.clusterSets[]` it may still specify a `spec.predicates.requiredClusterSelector{}` which will only match against clusters found in sets bound to the current namespace (by a `ManagedClusterSetBinding`.
+> :two: If a `Placement` does not specify any `spec.clusterSets[]` it may still specify a `spec.predicates.requiredClusterSelector{}` which will only match against clusters found in sets bound to the current namespace (by a `ManagedClusterSetBinding`.)
 
 ```yaml
 apiVersion: cluster.open-cluster-management.io/v1beta1
@@ -172,9 +174,9 @@ When more than one predicate is defined, they are OR'ed.  Refer to the [document
 
 # Placement Binding
 
-Once a placement produces a list of managed clusters the application or policy resource must be associated and ultimately propagated to the cluster. This is the job of the `PlacementBinding`
+Once a placement produces a list of managed clusters the policy resource must be associated with and ultimately propagated to the clusters. This is the job of the `PlacementBinding`.
 
-> :notebook:  A `PlacementBinding` binds a `Placement` to subjects (eg. `Policies`, `PolicySets`, `ApplicationSets`)
+> :notebook:  A `PlacementBinding` binds a `Placement` to subjects (eg. `Policies`, `PolicySets`)
 
 This example is pulled from a [documentation sample][1].
 
@@ -195,7 +197,10 @@ subjects:
 
 # Fitting it all together
 
-In this a visual representation there are 3 corporate standard policies which we expect to apply to all 4 of our clusters, and there is 1 additional policy which we expect to apply to the production clusters.
+In this visual representation there are 3 corporate standard policies which we expect to apply to all 4 of our clusters, and there is 1 additional policy which we expect to apply to the production clusters.
+
+This is accomplished by creating a standard ("STD") Placement that targets all clusters and a PROD Placement that matches only the production cluster. This targetting is permitted by the existance of the ManagedClusterSetBinding in this same namespace.
+
 
 ```mermaid
 graph TD;
@@ -220,7 +225,6 @@ subgraph ns-my-policies["Namespace 'my-policies'"]
 
     mcsb-prod("fa:fa-file-contract ManagedClusterSetBinding 'prod'")
     mcsb-prod -.-> mcs-prod
-    
 
     policy-std-1["fa:fa-file-code Policy 'corp-std-1'"]
     policy-std-2["fa:fa-file-code Policy 'corp-std-2'"]
@@ -248,6 +252,10 @@ subgraph ns-my-policies["Namespace 'my-policies'"]
     placement-std-filter{"fa:fa-filter Optional filter on<br> cluster set by labels"}
 end
 ```
+
+# Summary
+
+`ManagedClusterSetBindings` provide a controlled lense through which ManagedClusterSets may be managed. By controlling the creation of ManagedClusterSetBindings, the Policy management task may be delegated to a namespace administrator while retaining the control over which clusters may be impacted by that namespace administrator.
 
 # References
 
