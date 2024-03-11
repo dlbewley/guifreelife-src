@@ -37,11 +37,11 @@ jobs:
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         env:
-          PUBLISH_BRANCH: master
-          EXTERNAL_REPOSITORY: dlbewley/dlbewley.github.io
         with:
           allow_empty_commit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          commit_message: ${{ github.event.head_commit.message }}
-          publish_dir: ./public
           cname: guifreelife.com
+          commit_message: ${{ github.event.head_commit.message }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          external_repository: dlbewley/dlbewley.github.io
+          publish_dir: ./public
+          publish_branch: master
