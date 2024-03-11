@@ -3,14 +3,19 @@
 <!-- args: 
 	collapse={true,false}
 	prompt="text displayed before expand/collapse icon"
+	md={true,false} # render markdown
 -->
 <span class="expand">
 	<span class="expand-label"
 		style="cursor: pointer;" onclick="$h = $(this);$h.next('div').slideToggle(200,function () {$h.children('i').attr('class',function () {return $h.next('div').is(':visible') ? 'fas fa-chevron-down': 'fas fa-chevron-right';} ); } );">
-		{{.Get "prompt"}}
+		{{.Get "prompt" | markdownify }}
 		<i class="{{ if (.Get `collapse`) }}fas fa-chevron-right{{else}}fas fa-chevron-down{{end}}"></i>
 	</span>
 	<div class="expand-content" style="display:{{if (.Get `collapse`) }}none{{else}}block{{end}}; margin: 10px 0px 10px">
+		{{ if (.Get "md") }}
+		{{.Inner | markdownify}}
+		{{ else }}
 		{{.Inner | safeHTML}}
+		{{ end }}
 	</div>
 </span>
