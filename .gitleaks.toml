@@ -1,5 +1,10 @@
 [allowlist]
 description = "Allowlist"
+
+paths = [
+    '''Debugging-AWS-STS-Authentication-for-OpenShift-Operators''',
+    '''OpenShift-Enterprise-Upgrade-3.1-to-3.2'''
+]
 regexes = [
     '''AIzaSyDacpwSIXi6lk2fS2wzZOSoh7iHm_ZP3UE'''
 ]
