@@ -43,7 +43,7 @@ Policies are scoped to a namespace as you can see in the API resources table abo
 
 # Placement Rules
 
-In the recent past resources called `PlacementRule` and `PlacementBindings` were used to associate a policy with a cluster. Those resources still exist but are `PlacementRule` is now deprecated in favor of the `Placement` resource. This change enables greater control, and brings with it some other resources to facilitate the grouping of clusters together into sets. These cluster sets enable more configurable RBAC.
+In the recent past resources called `PlacementRule` and `PlacementBindings` were used to associate a policy with a cluster. Those resources still exist but `PlacementRule` is now deprecated in favor of the `Placement` resource. This change enables greater control, and brings with it some other resources to facilitate the grouping of clusters into sets. These cluster sets enable more configurable RBAC.
 
 > {{< collapsable prompt="📺 **API Resources** `apps.open-cluster-management.io`" collapse=true md=true >}}
 ```bash {hl_lines=[8]}
@@ -65,7 +65,7 @@ subscriptionstatuses                appsubstatus                 apps.open-clust
 
 RHACM can manage OpenShift and other Kubernetes clusters. See my previous [posts on RHACM]({{< ref "/tags/RHACM" >}}) for more background and recorded demonstrations.
 
-Each  Kubernetes cluster managed by RHACM is represented by a `ManagedCluster` resource. This resource is cluster scoped. You can see this in the table below.
+Each Kubernetes cluster managed by RHACM is represented by a `ManagedCluster` resource. This resource is cluster scoped. You can see this in the table below.
 
 <!--
 Demo Script:
@@ -128,7 +128,7 @@ The placement decision begins with a list of managed clusters visibile through t
 
 **Here is how the placement policy combines with other selection methods to determine a matching list of ManagedClusters:**
 
-1. Kubernetes clusters are registered with hub as cluster-scoped `ManagedClusters`
+1. Kubernetes clusters are registered with the RHACM hub as cluster-scoped `ManagedClusters`
 2. `ManagedClusters` are organized into cluster-scoped `ManagedClusterSets`
 3. `ManagedClusterSets` are bound to workload namespaces using `ManagedClusterSetBindings`
 4. Namespace-scoped `Placements` specify a _slice_ of `ManagedClusterSets` which select a working set of _potential_ `ManagedClusters`
