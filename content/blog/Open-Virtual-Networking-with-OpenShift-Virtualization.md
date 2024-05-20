@@ -125,11 +125,13 @@ The NAD includes a blob of JSON data that defines a [CNI configuration][6]. The 
 
 **CNI Plugin Types**
 
+There are many, but these two are our focus here.
+
 * `cnv-bridge` - Use when attaching to a Linux Bridge
-* `ovn-k8s-cni-overlay` - Has a [topology parameter][8] which may be
-** `localnet` - Define network local to the node (datacenter networks)
-** `layer2` - Define an overlay network (eg a private replication or healthcheck network)
-** `layer3` - Define a routeable overlay network
+* `ovn-k8s-cni-overlay` - Has a [topology parameter][8] which may be:
+  * `localnet` - Define network local to the node (datacenter networks)
+  * `layer2` - Define an overlay network (eg a private replication or healthcheck network)
+  * `layer3` - Define a routeable overlay network
 
 We are 
 https://github.com/ovn-org/ovn-kubernetes/blob/master/docs/multi-homing.md#configuring-secondary-networks
@@ -181,7 +183,7 @@ The ability to attach a pod to a network that is not the cluster network, means 
 
 The bridge from the software defined network out to the physical network may be the existing `br-ex` bridge created at installation time, or it may be a bridge defined on a second Network Interface Card or a bonding of NICs in the underlying server.
 
-> {{< collapsable prompt="📝 **NodeNetworkConfigurationPolicy** `nncp-br-vmdata.yaml`" collapse=false md=true >}}
+> {{< collapsable prompt="📝 **NodeNetworkConfigurationPolicy** `nncp-br-vmdata.yaml`" collapse=true md=true >}}
 ```yaml {linenos=inline,hl_lines=[11,23]}
 ---
 apiVersion: nmstate.io/v1
@@ -211,7 +213,7 @@ spec:
 
 The bridge may carry multiple VLAN tags that are supplied from the switch to the NIC on an 802.1q trunk. Each VLAN can then be identified as a "localnet" network on the OVN network.
 
-> {{< collapsable prompt="📝 **NetworkAttachmentDefinition** `nad-vlan-1924.yaml`" collapse=false md=true >}}
+> {{< collapsable prompt="📝 **NetworkAttachmentDefinition** `nad-vlan-1924.yaml`" collapse=true md=true >}}
 **Important** the NAD name (line 7) need not match the network name found in the CNI config (line 16), however, the netAttachDefName (line 19) must include the proper namespace and nad name.
 ```yaml {linenos=inline,hl_lines=[7,16,19]}
 ---
@@ -241,7 +243,7 @@ spec:
 
 Once a network is defined by a multis CNI config, (see line 16 above), then that network can be mapped to an OVS bridge using an NNCP like the following.
 
-> {{< collapsable prompt="📝 **NodeNetworkConfigurationPolicy** `nncp-map-vlan-1924.yaml`" collapse=false md=true >}}
+> {{< collapsable prompt="📝 **NodeNetworkConfigurationPolicy** `nncp-map-vlan-1924.yaml`" collapse=true md=true >}}
 ```yaml {linenos=inline,hl_lines=[10,11]}
 ---
 apiVersion: nmstate.io/v1
@@ -280,14 +282,18 @@ graph TD;
     subgraph nncp["fa:fa-code NNCP"]
       ens224["fa:fa-ethernet ens224"]
       ens224 ==> br-vmdata[["fa:fa-grip-vertical fa:fa-bridge br-vmdata"]]
-      br-vmdata --> BM1924(["fa:fa-tags bridge mapping"])
-      br-vmdata --> BM1926(["fa:fa-tags bridge mapping"])
+      br-vmdata -.-> BM1924(["fa:fa-tags bridge mapping"])
+      br-vmdata -.-> BM1926(["fa:fa-tags bridge mapping"])
 
     end
 
-    BM1924 --> vmdata_ovn_localnet_switch
-    BM1926 --> vmdata_ovn_localnet_switch
+    BM1924 -.-> vmdata_ovn_localnet_switch
+    BM1926 -.-> vmdata_ovn_localnet_switch
 
+  end
+
+  subgraph nsd["Namespace default"]
+    nsd-nad-1924[/"fa:fa-code NAD 'vlan-1924'"/]
   end
 
   subgraph ns1["Namespace 1"]
@@ -299,7 +305,7 @@ graph TD;
     subgraph ns1-vm2[fab:fa-windows WS VM]
         ns1-vm2-nic1["fa:fa-ethernet net1"]
     end
-    vmdata_ovn_localnet_switch  -.- ns1-nad-1924[/"fa:fa-code NAD 'dev-net'"/] --> ns1-vm2-nic1
+    vmdata_ovn_localnet_switch  -.- nsd-nad-1924 --> ns1-vm2-nic1
   end
 
   subgraph ns2["Namespace 2"]
@@ -323,7 +329,7 @@ graph TD;
   class clusternet,nginx-nic,ns2-vm1-nic2 clusterNet
 
   classDef vlan-1924 fill:#bbf
-  class ens224.1924,br-1924,ns1-nad-1924,ns2-nad-1924,ns1-vm2-nic1,ns1-ws2-1924,ns2-vm1-nic1,ns2-vm2-nic2 vlan-1924
+  class ens224.1924,br-1924,nsd-nad-1924,ns1-nad-1924,ns2-nad-1924,ns1-vm2-nic1,ns1-ws2-1924,ns2-vm1-nic1,ns2-vm2-nic2 vlan-1924
 
   style nncp stroke:#f66,stroke-width:2px,color:#999,stroke-dasharray: 5 5
   style T fill:white,stroke:darkgrey,stroke-width:1px,color:#333,stroke-dasharray: 2 2
@@ -350,6 +356,98 @@ e9a78dfc-97ef-49bd-8c6a-ada8d6ba19e6 (isolated_ovn_layer2_switch)
 
  -->
 
+```mermaid
+graph LR;
+
+subgraph Node
+  hostname["Key:\nHOST = hub-tq2sk-cnv-xcxw2"]
+
+  nic
+
+  subgraph ext_hub-tq2sk-cnv-xcxw2["External Switch"]
+    sw-ext[[ext_$HOST\n br-ex]]
+  end
+
+  sw-ext --> nic
+
+  subgraph join["Join Switch"]
+    sw-join[[join]]
+  end
+
+  subgraph GR_$HOST["Gateway Router"]
+    rt-gw{"GR_$HOST"}
+    rt-gw -- lrp:rtoj-GR_$HOST --> sw-join
+    rt-gw -- lrp:rtoe-GR_$HOST --> sw-ext
+  end
+
+  subgraph transit["Transit Switch"]
+    sw-transit[[transit_switch]]
+    sw-transit -. tunnels .- master1
+    sw-transit -.- master2
+    sw-transit -.- master3
+    sw-transit -.- worker1
+  end
+
+  subgraph sw-rtos-$HOST["Local Switch "]
+    sw-local[["sw-rtos-$HOST\n10.130.6.1/23"]]
+    sw-local --> pod1
+    sw-local --> pod2
+    sw-local --> pod3
+  end
+
+  subgraph ovn_cluster_router["Cluster Router"]
+    rt-cluster{"ovn_cluster_router"}
+    rt-cluster -- lrp:rtos-$HOST\n 10.64.0.1/16 --> sw-local
+    rt-cluster -- lrp:rtots-$HOST\n 100.88.0.16/16 --> sw-transit
+    rt-cluster -- lrp:rtoj-ovn_cluster_router --> sw-join
+  end
+
+  end
+  nic ==> inet
+inet
+  classDef nodes fill:white, stroke:black, stroke-width:4
+  class Node nodes
+
+  classDef routers fill:#fde
+  class ovn_cluster_router,GR_$HOST routers
+
+  style transit fill:#efe
+  style join fill:#fde
+  style sw-rtos-$HOST fill:#fee
+
+  classDef key fill:#ddd, color:black, stroke:black, stroke-width:2
+  class hostname key
+
+  classDef switch fill:#eff
+  class sw-join,sw-transit,sw-local,sw-ext switch
+
+  classDef router fill:#fef
+  class rt-gw,rt-cluster router
+
+  linkStyle default stroke:purple
+  linkStyle 0,2,13 stroke:blue
+  linkStyle 1,12 stroke:red
+  linkStyle 3,4,5,6 stroke:green
+  linkStyle 7,8,9,10 stroke:orange
+  linkStyle 11 stroke:green
+
+```
+
+# WIP Topics
+
+## Test Cases to Explore
+
+### Dual NIC √
+* NIC 1: Default Interface, `br-ex`
+* NIC 2: 802.1q trunk  VM Data Interface, `br-vmdata`
+
+### Single NIC without VLANs
+* NIC :one: 1: Default Interface, `br-ex`
+
+### Single NIC with 802.1q and a native VLAN for br-ex
+
+### Single NIC with 802.1q and a tagged VLAN for br-ex
+
 # Summary
 
 It is important to understand that the name found in the multus config defines a logical network and that [network name is cluster-scoped][8], meaning it should not be re-used unless the configuration is identical.
@@ -371,3 +469,4 @@ It is important to understand that the name found in the multus config defines a
 [6]: <https://github.com/containernetworking/cni/blob/spec-v0.4.0/SPEC.md> "CNI v0.4.0 Specification"
 [7]: <https://github.com/ovn-org/ovn-kubernetes> "OVN-Kubernetes CNI Plugin"
 [8]: <https://github.com/ovn-org/ovn-kubernetes/blob/master/docs/multi-homing.md> "Networks are not namespaced"
+[9]: <https://issues.redhat.com/browse/CNV-16692> "OpenShift Virt Feature: OVN Secondary Network"
