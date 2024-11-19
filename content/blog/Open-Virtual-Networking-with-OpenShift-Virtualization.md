@@ -1,11 +1,12 @@
 ---
 title: "Open Virtual Networking with OpenShift Virtualization"
-date: 2024-04-23
-banner: 
+date: 2024-05-26
+banner: /images/cat-loves-ovn.png
+# banner: /images/cat-loves-nncp.png
 layout: post
 mermaid: true
 asciinema: true
-draft: true
+draft: false
 tags:
   - draft
   - virtualization
@@ -15,7 +16,7 @@ tags:
 description: With traditional virtual machine workloads migrating to OpenShift Virtualization, it has become even more important to understand Open Virtual Network features and how to program access from containers and virtual machines directly to datacenter networks.
 ---
 
-With traditional virtual machine workloads migrating to OpenShift Virtualization, it has become even more important to understand Open Virtual Network features and how to program access from containers and virtual machines directly to datacenter networks.
+Virtual machine workloads are migrating to KubeVirt and OpenShift Virtualization at a rapid pace. Understanding how to securely access datacenter networks directly from pods will be critical to a successful migration. Read on to learn how [OVN-Kubernetes][11], [NMstate][3], and [Multus][12] work together to enable traditional architecutres in a cloud-native way.
 
 <!--more-->
 
@@ -29,7 +30,7 @@ Demo Script:
 
  -->
 
-# Kubernetes Resource Management is API First
+# Kubernetes Resource Management is API-First
 
 All resources are managed by [APIs in Kubernetes][2]. This may be a new concept to some, but it is a great advantage over traditional infrastructure.
 These APIs can be driven by the web console, by the command line, or application of resources via GitOps. The interface to these APIs are mediated by Resource Definitions.
@@ -40,7 +41,7 @@ This means anytime you seek to understand how to accomplish a task in Kubernetes
 
 > {{< collapsable prompt="⭐ **Pro Tip:** Identify resource definitions with the `oc api-resources` command and grep filter." collapse=true md=true >}}
 Keep in mind that the same name may be used by more than one API. This can be disambiguated with the `--api-group` argument.
-```bash {linenos=inline,hl_lines=[11,12]}
+```bash {linenos=inline,hl_lines=[5,11,12]}
 $  oc api-resources | grep -i network | sort
 egressrouters                                                                                                                     network.operator.openshift.io/v1                      true         EgressRouter
 ingressclasses                                                                                                                    networking.k8s.io/v1                                  false        IngressClass
@@ -241,6 +242,8 @@ spec:
 ```
 {{< /collapsable >}}
 
+{{< figure src="/images/ovn-perplexity.png" >}}
+
 Once a network is defined by a multis CNI config, (see line 16 above), then that network can be mapped to an OVS bridge using an NNCP like the following.
 
 > {{< collapsable prompt="📝 **NodeNetworkConfigurationPolicy** `nncp-map-vlan-1924.yaml`" collapse=true md=true >}}
@@ -356,6 +359,87 @@ e9a78dfc-97ef-49bd-8c6a-ada8d6ba19e6 (isolated_ovn_layer2_switch)
 
  -->
 
+{{< collapsable prompt="📝 **Node Logical Network**" collapse=false md=true >}}
+```mermaid
+graph LR;
+
+subgraph Node[Node Logical Open Virtual Network]
+
+
+  subgraph ext_hub-tq2sk-cnv-xcxw2["External Switch"]
+    sw-ext[["fa:fa-network-wired ext_$HOST"]]
+  end
+
+  subgraph join["Join Switch"]
+    sw-join[["fa:fa-network-wired join"]]
+  end
+
+  subgraph GR_$HOST["Gateway Router"]
+    rt-gw{"fa:fa-table GR_$HOST"}
+    rt-gw -- fa:fa-ethernet lrp:rtoj-GR_$HOST --> sw-join
+    rt-gw -- lrp:rtoe-GR_$HOST --> sw-ext
+  end
+
+  subgraph transit["Transit Switch"]
+    sw-transit[["fa:fa-network-wired transit_switch"]]
+    sw-transit -. tunnels .- master1
+    sw-transit -.- master2["fa:fa-computer master2"]
+    sw-transit -.- master3
+    sw-transit -.- worker1
+  end
+
+  subgraph sw-rtos-$HOST["Local Switch "]
+    sw-local[["fa:fa-network-wired sw-rtos-$HOST\n10.130.6.1/23"]]
+    sw-local --> pod1
+    sw-local --> pod2
+    sw-local --> pod3
+  end
+
+  subgraph ovn_cluster_router["Cluster Router"]
+    rt-cluster{"fa:fa-table ovn_cluster_router"}
+    rt-cluster -- lrp:rtos-$HOST\n 10.64.0.1/16 --> sw-local
+    rt-cluster -- lrp:rtots-$HOST\n 100.88.0.16/16 --> sw-transit
+    rt-cluster -- lrp:rtoj-ovn_cluster_router --> sw-join
+  end
+
+  end
+  sw-ext ==> ToR
+
+
+  classDef key fill:#ddd, color:black, stroke:black, stroke-width:2
+  class hostname key
+
+  classDef nodes fill:#fefefe, stroke:black, stroke-width:4
+  class Node nodes
+
+  classDef switch fill:#eff
+  class sw-join,sw-transit,sw-local,sw-ext switch
+
+  classDef router fill:#fef
+  class rt-gw,rt-cluster router
+
+  classDef routers fill:#fde
+  class ovn_cluster_router,GR_$HOST routers
+
+  style ext_hub-tq2sk-cnv-xcxw2 fill:#eef
+  style transit fill:#efe
+  style join fill:#fde
+  style sw-rtos-$HOST fill:#fee
+
+  classDef key fill:#ddd, color:black, stroke:black, stroke-width:2
+  class hostname key
+
+  classDef switch fill:#eff
+  class sw-join,sw-transit,sw-local,sw-ext switch
+
+  linkStyle default stroke:purple
+  linkStyle 1,12 stroke:blue
+  linkStyle 0,11 stroke:red
+  linkStyle 2,3,4,5,10 stroke:green
+  linkStyle 6,7,8,9 stroke:orange
+```
+{{< /collapsable >}}
+
 ```mermaid
 graph LR;
 
@@ -458,8 +542,8 @@ It is important to understand that the name found in the multus config defines a
 * [Kubernetes API Concepts][2]
 * [NMstate][3]
 * [KubeVirt][4]
-* [Connecting OpenShift VM to an OVN Secondary Network][5] - OCP Docs
-* [CNI v0.3.1 Specification][6]
+* [Connecting OpenShift VM to an OVN Secondary Network][5] - OpenShift Docs
+* [CNI Specification][6]
 
 [1]: <https://kubevirt.io/2023/OVN-kubernetes-secondary-networks-localnet.html> "Secondary networks connected to the physical underlay for KubeVirt VMs using OVN-Kubernetes"
 [2]: <https://kubernetes.io/docs/reference/using-api/api-concepts/> "Kubernetes API Concepts"
@@ -470,3 +554,6 @@ It is important to understand that the name found in the multus config defines a
 [7]: <https://github.com/ovn-org/ovn-kubernetes> "OVN-Kubernetes CNI Plugin"
 [8]: <https://github.com/ovn-org/ovn-kubernetes/blob/master/docs/multi-homing.md> "Networks are not namespaced"
 [9]: <https://issues.redhat.com/browse/CNV-16692> "OpenShift Virt Feature: OVN Secondary Network"
+[10]: <https://github.com/ovn-org/ovn-kubernetes/blob/master/docs/features/multiple-networks/multi-homing.md> "OVN-Kubernetes Multihoming"
+[11]: <https://ovn-kubernetes.io/> "OVN-Kubernetes"
+[12]: <https://github.com/k8snetworkplumbingwg/multus-cni> "Multus CNI"
