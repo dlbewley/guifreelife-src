@@ -28,10 +28,10 @@ Accessing the details of the software defined networking features of OpenShift c
   {{< asciinema key="ovn-cli-20241119_1521" rows="40" font-size="smaller" poster="npt:0:22" loop=false >}}
   {{< /collapsable>}}
 
-
-Here is the `ovncli` script used above.
-{{< gist dlbewley b4d4c85931e7a9c03caf56db1a1a0d2e >}}
-
+**[Here][6] is the `ovncli` script used above:**
+> {{< collapsable prompt="📓 Script" collapse=true >}}
+  {{< gist dlbewley b4d4c85931e7a9c03caf56db1a1a0d2e >}}
+  {{< /collapsable>}}
 
 <!--
 Demo Script:
@@ -174,13 +174,16 @@ OpenShift uses OVN-Kuberenets as the CNI which enables a very flexible if not co
 
 # References
 
+* [Open Virtual Switch][5]
 * [Open Virtual Network][1]
 * [OVN-Kubernetes][4]
 * [OVN-Kubernetes CNI Plugin][3] - github.com
 * [Container Network Interface Specification][2]
+* [My ovncli.sh script][6]
 
 [1]: <https://www.ovn.org/en/> "OpenVirtualNetwork"
 [2]: <https://github.com/containernetworking/cni/blob/spec-v0.4.0/SPEC.md> "CNI v0.4.0 Specification"
 [3]: <https://github.com/ovn-org/ovn-kubernetes> "OVN-Kubernetes CNI Plugin"
 [4]: <https://ovn-kubernetes.io/> "OVN-Kubernetes"
 [5]: <https://www.openvswitch.org/> "Open Virtual Switch"
+[6]: <https://gist.github.com/dlbewley/b4d4c85931e7a9c03caf56db1a1a0d2e> "ovncli script"
