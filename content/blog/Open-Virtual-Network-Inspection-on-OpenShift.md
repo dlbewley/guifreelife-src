@@ -20,7 +20,7 @@ Accessing the details of the software defined networking features of OpenShift c
 
 # Open Virtual Network
 
-Open Virtual Network is a technology for joining the software defined networks, and logical resources within, as an overaching virtual network. While virtual switches have been used in OpenShift for quite some time the method used to program them is now orchestrated by OVN technology. 
+[Open Virtual Switch][5] has been used to power the software defined network on OpenShift within the defunct openshift-sdn CNI for quite some time. Now Open Virtual Network provides a higher level abstraction and orchestration of network features including virtual switches, routers, load balancers, and more via the ovn-kubernetes CNI.
 
 **Demo: Access OVN Northbound Database**
 > {{< collapsable prompt="📺 ASCII Screencast" collapse=false >}}
@@ -183,3 +183,4 @@ OpenShift uses OVN-Kuberenets as the CNI which enables a very flexible if not co
 [2]: <https://github.com/containernetworking/cni/blob/spec-v0.4.0/SPEC.md> "CNI v0.4.0 Specification"
 [3]: <https://github.com/ovn-org/ovn-kubernetes> "OVN-Kubernetes CNI Plugin"
 [4]: <https://ovn-kubernetes.io/> "OVN-Kubernetes"
+[5]: <https://www.openvswitch.org/> "Open Virtual Switch"
