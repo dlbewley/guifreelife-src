@@ -22,7 +22,7 @@ Virtual machine workloads are migrating to KubeVirt and OpenShift Virtualization
 
 # Open Virtual Network
 
-Open Virtual Network is a technology for joining the software defined networks, and logical resources within, as an overaching virtual network. While virtual switches have been used in OpenShift for quite some time the method used to program them is now orchestrated by OVN technology. 
+Open Virtual Network enables a high level representation of a software defined network. While virtual switches have been used in OpenShift for quite some time they were managed individualy, the method used to program and coordinate virtual switching and routing is now orchestrated by OVN technology. 
 
 <!--
 Demo Script:
@@ -268,19 +268,26 @@ spec:
 ```mermaid
 graph TD;
 
-  switch["Switch fa:fa-grip-vertical"]
+  switch["fa:fa-grip-vertical Switch"]
   machinenet["fa:fa-network-wired Machine Network<br> 192.168.4.0/24"]
-  switch --> machinenet --> ens192
+  switch --> machinenet --> eno1
+             machinenet --> eno2
   switch ==> T(["fa:fa-tags 802.1q Trunk"]) ==> ens224[ens224]
 
   subgraph node["CNV Worker"]
-    ens192["fa:fa-ethernet ens192"]
-    ens192 ==> br-ex[["fa:fa-grip-vertical fa:fa-bridge br-ex"]]
+    eno1["fa:fa-ethernet eno1"]
+    eno2["fa:fa-ethernet eno2"]
+    eno1 --> bond0
+    eno2 --> bond0
+    bond0["fa:fa-ethernet bond0"]
+    bond0 ==> br-ex[["fa:fa-grip-vertical fa:fa-bridge br-ex"]]
+    br-int[["fa:fa-grip-vertical fa:fa-bridge br-int"]]
+    br-ex -.- br-int
     servicenet["fa:fa-network-wired Service Network<br> 172.30.0.0/16"]
     clusternet["fa:fa-network-wired Cluster Network<br> 10.128.0.0/14"]
 
-    ens192 --> servicenet
-    ens192 --> clusternet
+    br-int --> servicenet
+    br-int --> clusternet
 
     subgraph nncp["fa:fa-code NNCP"]
       ens224["fa:fa-ethernet ens224"]
@@ -517,6 +524,54 @@ inet
 
 ```
 
+# Node Level View
+
+ssh or debug into the node
+In the node OS there is no ovn-nbctl only an ovs-vsctl
+
+```bash
+sh-5.1# hostname
+hub-v4tbg-cnv-99zmp
+
+sh-5.1# ovs-vsctl list-br
+br-ex
+br-int
+br-vmdata
+
+sh-5.1# nmcli con
+NAME                UUID                                  TYPE           DEVICE
+ovs-if-br-ex        aec716fd-096b-4ef6-a6cb-96d8fecf5fe3  ovs-interface  br-ex
+Wired connection 2  10391244-3dbb-3ade-a26d-f8c361c346b2  ethernet       ens224
+br-ex               da9a4c2c-9071-445c-8426-183b5b3e05f0  ovs-bridge     br-ex
+br-vmdata-br        2acd0411-fa90-435e-9bec-1b3d9a5ef827  ovs-bridge     br-vmdata
+ens224-port         1cf8c810-a55b-4938-8f00-f2ca57803881  ovs-port       ens224
+ovs-if-phys0        902e86b9-6c95-4845-b9eb-64fbb3cca58b  ethernet       ens192
+ovs-port-br-ex      561b1a06-3a6b-4313-b119-5d3f3caf1800  ovs-port       br-ex
+ovs-port-phys0      404a5336-503f-4144-961e-35635fd92fc6  ovs-port       ens192
+lo                  efb54016-6e10-4020-bb8b-fd2d8c6577a0  loopback       lo
+Wired connection 1  bcd3a32d-6de8-3ebc-87b1-8f843871b1e3  ethernet       --
+```
+
+ovs-vsctl show will display all the Open vSwitch bridges and ports.
+
+We can view the ports exist on a given bridge
+
+```bash
+sh-5.1# ovs-vsctl list-ports br-ex
+ens192
+patch-br-ex_hub-v4tbg-cnv-99zmp-to-br-int
+sh-5.1# ovs-vsctl list-ports br-vmdata
+ens224
+patch-vlan.1924_ovn_localnet_port-to-br-int
+```
+
+We can view what networks are mapped to which OVS bridges.
+
+```bash
+sh-5.1# ovs-vsctl get Open_vSwitch . external_ids:ovn-bridge-mappings
+"machine-net:br-ex,physnet:br-ex,trunk:br-trunk,vlan-1924:br-vmdata,vlan-1926:br-vmdata"
+```
+
 # WIP Topics
 
 ## Test Cases to Explore
@@ -557,3 +612,4 @@ It is important to understand that the name found in the multus config defines a
 [10]: <https://github.com/ovn-org/ovn-kubernetes/blob/master/docs/features/multiple-networks/multi-homing.md> "OVN-Kubernetes Multihoming"
 [11]: <https://ovn-kubernetes.io/> "OVN-Kubernetes"
 [12]: <https://github.com/k8snetworkplumbingwg/multus-cni> "Multus CNI"
+[13]: <https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model> "The Kubernetes Network Model" 
