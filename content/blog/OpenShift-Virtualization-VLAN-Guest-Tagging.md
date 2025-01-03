@@ -5,7 +5,6 @@ banner: /images/vgt-trunk.jpeg
 layout: post
 mermaid: false
 asciinema: true
-draft: true
 tags:
   - networking
   - openshift
