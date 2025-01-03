@@ -1,5 +1,5 @@
 ---
-title: "OpenShift Virtualization VLAN Guest Tagging"
+title: "OpenShift Virtual Guest Tagging"
 date: 2025-01-02
 banner: /images/vgt-trunk.jpeg
 layout: post
@@ -13,29 +13,33 @@ tags:
 description: Some workloads require the use of VLAN tagged interfaces in virtual machines. VMware terms this feature VGT. OpenShift Virtualization supports this feature using traditional Linux Bridge interfaces. This post details and demonstrates an implementation.
 ---
 
-Some workloads require the use of VLAN interfaces in virtual machines. VMware terms this feature "Virtual Guest Tagging" or "VLAN Guest Tagging" while OpenStack calls it "VLAN-aware instances". OpenShift Virtualization can implement this use case with traditional Linux Bridge interfaces.
+Some workloads require the use of VLAN interfaces in virtual machines. VMware terms this feature "Virtual Guest Tagging" or "VLAN Guest Tagging" while OpenStack calls it "VLAN-aware instances". See how OpenShift Virtualization can pass 802.1q trunks to VMs using a traditional Linux Bridge interface.
 
 <!--more-->
 
 # Bridges and VLANs
 
-{{< figure src="/images/openshift-virt-switch-tags.gif" title="Animation of VLAN tagged frames traversing a switch" class="pull-right" >}}
+{{< figure src="/images/openshift-virt-switch-tags.gif" title="Frames exiting access ports are normally untagged" alt="Animation of VLAN tagged frames traversing a switch" class="pull-right" >}}
 
-Chances are you are far too young to have ever seen a hardware bridge in the origional form. Traditionally a bridge simply existed to relay frames (_just think packets_) from one physical segment to another. A switch is an evolved bridge with more intelligence.
+Traditionally a bridge simply existed to relay [data link layer][11] ethernet [frames][12] (_just think packets_) from one physical segment to another. A switch is an evolved bridge which can apply more intelligence when deciding which interface to send a frame.
 
-Switches understand which port a MAC address was seen on and can make more efficient decisions when directing frames. Additionally switches can be segmented into multiple broadcast domains though the use of VLANs.
+Each frame has a source and destination MAC address. Switches collect the MAC address from frames and understand which port a MAC address was learned on, this enables more efficient decisions when directing frames to ports. Additionally switches can be segmented into multiple broadcast domains though the use of VLANs by tagging frames with a unique ID.
 
-An uplink on a switch may be passing in an 802.1q trunk which adds a tag identifying a VLAN to every frame. The tags remain on the frame until it is passed out a port which is configured as an "access port" associated with a specific VLAN.
+The uplink feeding data to a switch may be an 802.1q trunk which will include a VLAN ID tag on each frame. The tags remain on the frame until it is passed out a port which is configured as an "access port" associated with a specific VLAN. If a tag comes into the switch via that access port, the tag assocated with that port is added back to the frame by the switch.
 
-That's normally exactly what you want, but in this case we want to create a port leading to a VM as a trunk port instead of a typical access port.
-In that case the tags will remain intact when reaching a VM.
+That's normally exactly what you want, but let's dive into a solution to treate the port as a trunk and keep tags attached and visible inside of the VM operating system.
 
+First a little background on OpenShift Networking.
 
 # OVS Bridge and Linux Bridge
 
-OpenShift networking uses the [OVN-Kubernetes][4] CNI which includes support for a `localnet` topology layered upon an OVS Bridge. See this [previous post][9] on OVN. While OVN is the most featureful and recommended interface, it does [not yet support][7] VLAN tags through a localnet attachment.
+OpenShift uses the [OVN-Kubernetes][4] CNI which includes support for a `localnet` topology layered upon an OVS Bridge. See this [previous post][9] on OVN. While OVN is the most featureful and recommended interface, it does [not yet support][7] VLAN tags through a localnet attachment.
 
-Fortunately this can be accomplished using a Linux Bridge interface. A Linux Bridge has some intelligence in handling the ports attached to it like a switch.
+Fortunately this can be accomplished using a Linux Bridge interface. Despite the name, a Linux Bridge has intelligence for handling frame construction and the ports attached to it like a switch.
+
+{{< figure src="/images/openshift-virt-vgt-node.png" title="OpenShift Node with 3 bridges" alt="OpenShift Node networking" >}}
+
+Above is a diagram of a node having 3 bridges. Bridge `br-ex` is the default management interface, the second `br-vmdata` was created to attach VMs to provider networks as `localnet` secondary networks. Both of these bridges are  OVS Bridges. The third bridge `br-trunk` is a [Linux Bridge][8] and was created only for the use case we are discussing here.
 
 ## Creating the Linux Bridge
 
@@ -87,7 +91,7 @@ Next create a network attachment definition called `trunk` in the demo-vgt names
 >  [ref](https://github.com/dlbewley/demo-virt/blob/main/demos/vgt/components/trunk/linux-bridge/nad.yaml)
 
 * {{< collapsable prompt="trunk nad.yaml" collapse=false md=true >}}
-```yaml {linenos=inline,hl_lines=[17,19,21]}
+```yaml {linenos=inline,hl_lines=[16,18,20]}
 ---
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
@@ -117,7 +121,7 @@ spec:
 
 ## Host to Guest VLAN Tagging
 
-In this demo, the provider VLAN 1924 (meaning existing outside the OpenShift cluster) is among several VLAN tags trunked to `ens256` on the OpenShift Node. You will see a VLAN interface created in the VM called `eth1.1924` which is directly attached to this physical VLAN.
+In this demo, the provider (meaning existing outside the OpenShift cluster) VLAN 1924 is among several VLAN tags trunked to `ens256` on the OpenShift Node. You will see a VLAN interface created in the VM called `eth1.1924` which is directly attached to this physical VLAN.
 
 **Demo ([source][6]): 802.1q trunk to a VM using linux-bridge on the host and cnv-bridge type NetworkAttachmentDefinition**
 > {{< collapsable prompt="📺 ASCII Screencast" collapse=false >}}
@@ -127,7 +131,7 @@ In this demo, the provider VLAN 1924 (meaning existing outside the OpenShift clu
 
 ## Guest to Guest VLAN Tagging
 
-When the VM NIC is attached via Linux Bridge it also becomes possible to make up arbitrary VLAN interfaces to trunk between virtual machines. In otherwords you can make up your own VLAN tags and trunk them peer-to-peer between VMs. 
+When the VM NIC is attached via Linux Bridge it also becomes possible to make up arbitrary VLAN tags to trunk between virtual machines. In otherwords you can make up your own VLAN tags and trunk them peer-to-peer between VMs. 
 
 This demo shows made up VLANs 222 and 333 being created from thin air and passed between 2 VMs via the same `trunk` attachment to the `br-trunk` Linux Bridge used above.
 
@@ -186,9 +190,11 @@ nmcli connection up $NIC.$VLAN
 
 # Summary
 
-OVS Bridging + `localnet` topology is the recommended way to attach a OpenShift Virtualization VM guest to a provider VLAN. However, when there is a need to pass VLAN tags all the way through to the VM guest your options become special SR-IOV hardware or a Linux Bridge. You just saw how to implement the linux bridge solution.
+OVS Bridging + `localnet` topology is the recommended way to attach a OpenShift Virtualization VM guest to a provider VLAN. However, when there is a need to pass VLAN tags all the way through to the VM guest your options become special SR-IOV hardware and possibly [QinQ][13] or a software Linux Bridge. You just saw how to implement the Linux Bridge solution.
 
-Stand by for OpenShift's User Defined Networks feature which is just around the corner. UDN will bring greater flexibility, simplicity, tenancy, and enhanced support for "bringing your own netork". However, UDN will not support VLAN tags out of the gate.
+Stand by for OpenShift's User Defined Networks feature which is just around the corner. UDN will bring greater flexibility, simplicity, tenancy, and enhanced support for "bringing your own netork". However, VLAN tags will not be supported out of the gate.
+
+More on UDN in a future post.
 
 # References
 
@@ -209,3 +215,6 @@ Stand by for OpenShift's User Defined Networks feature which is just around the 
 [8]: <https://developers.redhat.com/articles/2022/04/06/introduction-linux-bridging-commands-and-features> "Linux Bridge"
 [9]: {{< ref "/blog/Open-Virtual-Network-Inspection-on-OpenShift.md" >}} "Open Virtual Network Inspection on OpenShift" 
 [10]: <https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/managing_networking_resources/vlan-aware-instances_rhoso-mngnet#vlan-aware-instances_rhoso-mngnet> "OpenStack VLAN Aware Instances"
+[11]: <https://en.wikipedia.org/wiki/Data_link_layer>
+[12]: <https://en.wikipedia.org/wiki/Ethernet>
+[13]: <https://docs.openshift.com/container-platform/4.17/networking/hardware_networks/configuring-sriov-qinq-support.html> "QinQ"
