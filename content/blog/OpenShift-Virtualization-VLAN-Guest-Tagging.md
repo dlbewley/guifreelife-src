@@ -71,7 +71,7 @@ spec:
 
       - name: br-trunk
         description: |-
-          A dedicated OVS bridge with ens256 as a port
+          Linux Bridge with ens256 as a port
           allowing all VLANs and untagged traffic.
         type: linux-bridge
         state: up
