@@ -8,6 +8,8 @@ tags:
   - OCP4
   - openshift
   - ssl
+  - kubeconfig
+  - security
 description: How to extract and split the CA certificates into individual files from an OpenShift kubeconfig.
 ---
 
