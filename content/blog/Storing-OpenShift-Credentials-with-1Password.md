@@ -6,6 +6,7 @@ banner: /img/banners/mushroom-moss.jpg
 tags:
  - openshift
  - OCP4
+ - kubeconfig
  - security
 description: How to securely manage credentials for multiple Kubernets clusters using 1Password
 ---
