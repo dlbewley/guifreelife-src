@@ -38,8 +38,13 @@ export DURATION='1h'
 ```bash
 source ~/.kube/ocp/agent/.env
 echo $KUBECONFIG
+/Users/dale/.kube/ocp/agent/kubeconfig
+
 oc config current-context
+default/api-agent-lab-bewley-net:6443/system:admin
+
 oc whoami
+system:admin
 ```
 
 * 🔑 Gather the API CA certificate
