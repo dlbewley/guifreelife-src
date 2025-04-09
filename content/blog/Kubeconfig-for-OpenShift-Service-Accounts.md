@@ -10,10 +10,10 @@ tags:
   - kubernetes
   - kubeconfig
   - security
-description: This post demonstrates how to properly generate kubeconfig files for OpenShift ServiceAccounts, enabling secure token-based authentication and TLS connections. You'll learn how to create ServiceAccounts, generate time-limited tokens, bundle CA certificates, and package everything into a distributable kubeconfig file that can be stored as a Secret for download.
+description: This post demonstrates how to properly generate kubeconfig files for OpenShift ServiceAccounts, enabling secure token-based authentication and TLS connections. You will learn how to create ServiceAccounts, generate time-limited tokens, bundle CA certificates, and package everything into a distributable kubeconfig file that can be stored as a Secret for download.
 ---
 
-This post demonstrates how to properly generate kubeconfig files for OpenShift ServiceAccounts, enabling secure token-based authentication and TLS connections. You'll learn how to create ServiceAccounts, generate time-limited tokens, bundle CA certificates, and package everything into a distributable kubeconfig file that can be stored as a Secret for download.
+This post demonstrates how to properly generate kubeconfig files for OpenShift ServiceAccounts, enabling secure token-based authentication and TLS connections. You will learn how to create ServiceAccounts, generate time-limited tokens, bundle CA certificates, and package everything into a distributable kubeconfig file that can be stored as a Secret for download.
 
 <!--more-->
 
