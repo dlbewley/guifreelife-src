@@ -208,10 +208,12 @@ kubeconfig:  5191 bytes
 
 ## References
 
-* [How to create kubeconfig for a certain serviceaccount][1] - Red Hat KCS
 * [Oc Token Creation][2] - OpenShift Documentation
 * [Demo Script][3]
 * [Demo Repo][4]
+* [How to create kubeconfig for a certain serviceaccount][1] - Red Hat KCS
+* [Unable to get ServiceAccount token in OpenShift 4 ][7] - Red Hat KCS
+* [OpenShift RFE to Add Download from Console][8]
 
 **See also:**
 * [Storing OpenShift Credentials with 1Password][5]
@@ -223,3 +225,5 @@ kubeconfig:  5191 bytes
 [4]: <https://github.com/dlbewley/demo-kubeconfig/tree/main> "Demo Repo"
 [5]: {{< ref "/blog/Storing-OpenShift-Credentials-with-1Password.md" >}} "Storing OpenShift Credentials with 1Password"
 [6]: {{< ref "/blog/Extracting-CA-Certs-From-Kubeconfig.md" >}} "Extracting TLS CA Certs from Kubeconfig.md"
+[7]: <https://access.redhat.com/solutions/6992422> "Unable to get ServiceAccount token in OpenShift 4"
+[8]: <https://issues.redhat.com/browse/OCPBUGS-54866> "RFE to Add Download from Console"
