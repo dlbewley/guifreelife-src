@@ -1,6 +1,6 @@
 ---
-title: "Managing Readable OpenShift MachineConfigs using Butane and Make"
-date: 2025-05-28
+title: "Managing Readable OpenShift MachineConfigs with Butane"
+date: 2025-05-29
 banner: /images/machineconfigs-butane.png
 layout: post
 mermaid: false
@@ -20,16 +20,20 @@ but managing base64 encoded text can be challenging. What if I told you that you
 
 # Machine Config Operator
 
-OpenShift manages the node operating system using the [Machine Config Operator][6]. Components of the operator include the Machine Config Sever (MCS) which provides ignition files to clients over HTTPS, and a agent running on each node called the Machine Config Daemon (MCD).
+OpenShift manages the operating system running on cluster nodes using the [Machine Config Operator][6] (MCO).
+
+Components of the MCO include the Machine Config Sever (MCS) which provides ignition files to clients over HTTPS, and an agent running on each node called the Machine Config Daemon (MCD).
+
+The MCD detects drift in the local machine configuration from the desired configuration expressed by the MCS.
 
 # Machine Config Pools
 
-There are a number of machine configs created during the cluster installation process. Settings like the kubelet configuration or ssh keys. These configs are formatted into MachineConfig resources and correlated to nodes by Machine Config Pools (MCPs). All the MachineConfigs for a pool are rendered into one large JSON blob for publishing by the MCS.
+There are a number of settings and artifacts created during the OpenShift cluster installation process. Settings like the kubelet configuration or artifacts like ssh keys. These are all formatted into MachineConfig resources and correlated to nodes by way of Machine Config Pools (MCPs). By default there will be a pool for the control plane and a pool for the worker nodes.
 
-Nodes are associated to MCPs by matching labels. You may need to create unique MCPs for heterogenous hardware, or you may just need to add some configuration to an existing MCP to enable multipath I/O or some other service.
+All the MachineConfigs for a given pool are rendered into one large JSON blob for publishing by the MCS.  Nodes are associated to MCPs by matching labels. You may need to create unique MCPs for heterogenous hardware, or you may just need to add some configuration to an existing MCP to enable multipath I/O or some other service.
 
 
-> {{< collapsable prompt=" **Truncated Worker MCP Example**" collapse=true md=true >}}
+> {{< collapsable prompt=" **Truncated Worker MCP Example**" collapse=false md=true >}}
   MachineConfigs are associated with the pool using `machineConfigSelectors`, and nodes are assocatied with a pool by `nodeSelctors`.
   ```yaml {{hl_lines=[8,11]}}
   apiVersion: machineconfiguration.openshift.io/v1
@@ -52,7 +56,7 @@ Nodes are associated to MCPs by matching labels. You may need to create unique M
 
 Because an Ignition file is JSON formatted, a MachineConfig must be encoded into a safe representation. Here is what an example MachineConfiguration file looks like.
 
-At a glance, maybe you can tell it is writing a file but you can't easily read what's in it or edit it.
+At a glance, maybe you can tell it is writing a file but you can't easily read what's in it or make changes to it.
 
 ```yaml
 apiVersion: machineconfiguration.openshift.io/v1
@@ -75,7 +79,7 @@ spec:
           path: /tmp/message.txt
 ```
 
-This text is actually URL encoded rather than base64 encoded. Let's decode the mystery text.
+This text is URL encoded, but you will find base64 encoding used to for longer strings. Let's decode the mystery text.
 
 ```bash
 $ cat `which urldecode`
@@ -89,7 +93,7 @@ Hello, world!
 OK, that example was pretty clearly writing "Hello, world!", but can you read this one:
 
 > {{< collapsable prompt=" **👹 Uglier Example**" collapse=true md=true >}}
-  This text is gzipped and then base64 encoded.
+  In this example, the `/etc/multipath.conf` file contents are gzipped and then base64 encoded.
   ```yaml
   apiVersion: machineconfiguration.openshift.io/v1
   kind: MachineConfig
@@ -148,16 +152,24 @@ Or you could reference a stand alone file.
         local: message.txt
 ```
 
-This is particularly helpful if you are managing a complex configuration file like [`multipath.conf`][8].
+This is particularly helpful if you are managing a complex configuration file like [`multipath.conf`][8]. Just place the multipath.conf into a folder called `inc/` and generate the machineconfig using the [butane command][9].
 
+**Generate a MachineConfig with Butane**
+
+```bash
+cp multipath.conf inc/
+butane -d inc < 99-worker-multipath.bu > 99-worker-multipah.yaml 
+```
 
 # Generating MachineConfigs 
 
-Once you adopt butane now you will have to maintain your MachineConfigs and make sure they are always up to date. The following Makefile from [this repo][2] provides an example. The MachineConfigs stored in `*.yaml` files are generated from the Butane `butane/*.bu` files. 
+Once you adopt butane you will then need a scalable way to maintain your MachineConfigs to make sure they are always up to date.  The following [Makefile][10] from [this repo][2] provides a way to do that.
 
-Any configuration files or scripts that are included by the butanes are detected by the Makefile and noted in dependencies files in `.deps/`. If either an included file or a Butane file changes, then the MachineConfig file is automatically flagged as stale and regenerated when you run `make`. 
+The MachineConfigs stored in `*.yaml` files are generated from the Butane `butane/*.bu` files.  Any configuration files or scripts that are included from the `inc/` directory are detected by the Makefile and noted in dependencies files in `.deps/`.
 
-> **⭐ Pro Tips** Because dependencies are ephemeral and generated on the fly, there isn't need to store them in git. You can safely add them to `.gitignore`. 
+When you run `make`, these dependincies are checked. If either an included file or a Butane file changes, then the MachineConfig file is automatically flagged as stale and regenerated.
+
+> **⭐ Pro Tip** Because dependencies are ephemeral and generated on the fly, there isn't need to store them in git. You can safely add them to `.gitignore`. 
 
 ## Makefile
 
@@ -200,6 +212,10 @@ clean:
   {{< asciinema key="machineconfig-20250529" rows="50" font-size="smaller" poster="npt:1:06" loop=true >}}
   {{</collapsable>}}
 
+## Summary
+
+Leave the base64 encoding to the robots 🤖. Make things easier, and write in plain text with Butane 🔥!
+
 ## References
 
 * [Demo Github Repo][2]
@@ -207,8 +223,8 @@ clean:
 * [CoreOS Ignition Specification][1]
 * [OpenShift 4.18 Butane Spec][5]
 * [OpenShift Machine Config Operator][6] - Github
-* [ OpenShift 4.18 Machine Config Docs][7]
-
+* [OpenShift 4.18 Machine Config Docs][7]
+* [Download Butane][9]
 
 [1]: <https://coreos.github.io/ignition/specs/> "CoreOS Ignition Spec"
 [2]: <https://github.com/dlbewley/demo-machineconfig/> "Demo Github Repo"
@@ -218,3 +234,5 @@ clean:
 [6]: <https://github.com/openshift/machine-config-operator> "OpenShift Machine Config Operator"
 [7]: <https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_configuration/machine-config-index> "OpenShift 4.18 Machine Config Docs"
 [8]: <https://github.com/dlbewley/demo-machineconfig/blob/main/machineconfigs/inc/multipath.conf> "multipath.conf"
+[9]: <https://mirror.openshift.com/pub/openshift-v4/clients/butane/latest/> "Download Butane"
+[10]: <https://github.com/dlbewley/demo-machineconfig/blob/main/machineconfigs/Makefile> "Makefile"
