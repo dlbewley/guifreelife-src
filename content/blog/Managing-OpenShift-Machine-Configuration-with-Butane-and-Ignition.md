@@ -10,7 +10,7 @@ tags:
   - openshift
   - kubernetes
   - operators
-description: The OpenShift Machine Configuration Operator applies configuration changes to nodes using a syntax called Ignition, but managing base64 encoded text can be challenging. Using plain text doesn't have to be difficult."
+description: The OpenShift Machine Configuration Operator applies configuration changes to nodes using a syntax called Ignition, but managing base64 encoded text can be challenging. Use plain text with Butane!
 ---
 
 The OpenShift Machine Configuration Operator applies configuration changes to to nodes using a syntax called [Ignition][1],
