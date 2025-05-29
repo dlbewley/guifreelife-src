@@ -10,6 +10,7 @@ tags:
   - automation
   - openshift
   - kubernetes
+  - operators
 description: The OpenShift Machine Configuration Operator applies configuration changes to nodes using a syntax called Ignition, but managing base64 encoded text can be challenging. Using plain text doesn't have to be difficult."
 ---
 
@@ -204,6 +205,7 @@ clean:
 	rm -f $(MACHINECONFIGS)
 	rm -rf $(DEPS_DIR)
 ```
+_[Source][10]_
 
 # Demo 
 
@@ -212,11 +214,11 @@ clean:
   {{< asciinema key="machineconfig-20250529" rows="50" font-size="smaller" poster="npt:1:06" loop=true >}}
   {{</collapsable>}}
 
-## Summary
+# Summary
 
-Leave the base64 encoding to the robots 🤖. Make things easier, and write in plain text with Butane 🔥!
+Leave the base64 encoding to the robots 🤖. Make things easier on yourself. Write in plain text with Butane 🔥!
 
-## References
+# References
 
 * [Demo Github Repo][2]
 * [Demo Recording][3]
