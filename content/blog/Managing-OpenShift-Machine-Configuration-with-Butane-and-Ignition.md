@@ -5,7 +5,6 @@ banner: /images/machineconfigs-butane.png
 layout: post
 mermaid: false
 asciinema: true
-draft: true
 tags:
   - automation
   - openshift
