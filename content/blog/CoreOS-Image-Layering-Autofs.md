@@ -38,10 +38,10 @@ This step demonstrates:
 * Verifying the secrets exist and match the MachineOSConfig requirements
 
 
-> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=false >}}
-  <p>Title</p>
-  [asciicast](https://asciinema.org/a/721881)
+> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=true >}}
+  <p>CoreOS Image Layering Demo - Pull and Push Secrets</p>
   {{< asciinema key="layering-01-secrets-20250603_1502" rows="50" font-size="smaller" poster="npt:1:06" loop=true >}}
+  <a href=https://asciinema.org/a/721881>Asciinema</a>
   {{</collapsable>}}
 
 
@@ -61,11 +61,11 @@ This step demonstrates:
 * Monitoring the MachineOSBuild process and job completion
 * Verifying the custom image is associated with the worker-automount pool
 
-* [![asciicast](https://asciinema.org/a/722700.svg)](https://asciinema.org/a/722700)
 
-> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=false >}}
-  <p>Title</p>
-  {{< asciinema key="layering-02-machineosconfig-20250609_1929" rows="50" font-size="smaller" poster="npt:1:06" loop=true >}}
+> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=true thumbnail="/images/layering-cake-trans.png" >}}
+  <p>CoreOS Image Layering Demo - Machine Config Pool and MachineOSConfig</p>
+  {{< asciinema key="layering-02-machineosconfig-20250609_1929" rows="50" font-size="smaller" poster="npt:0:07" loop=true >}}
+  <a href=https://asciinema.org/a/722700>Asciinema</a>
   {{</collapsable>}}
 
 
@@ -85,11 +85,11 @@ This step demonstrates:
 * Verifying successful update via MCP and node status checks
 * Confirming autofs RPM is installed on the updated node
 
-* [![asciicast](https://asciinema.org/a/722913.svg)](https://asciinema.org/a/722913)
 
-> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=false >}}
-  <p>Title</p>
-  {{< asciinema key="layering-03-imaging-20250611_1148" rows="50" font-size="smaller" poster="npt:1:06" loop=true >}}
+> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=true >}}
+  <p>CoreOS Image Layering Demo - Node Imaging</p>
+  {{< asciinema key="layering-03-imaging-20250611_1148" rows="50" font-size="smaller" poster="npt:0:11" loop=true >}}
+  <a href=https://asciinema.org/a/722913>Asciinema</a>
   {{</collapsable>}}
 
 
@@ -104,22 +104,15 @@ This step demonstrates:
 * Waiting for the node to reboot and MCP to be updated
 * Verifying the home directory is an NFS mount
 
-* [![asciicast](https://asciinema.org/a/722936.svg)](https://asciinema.org/a/722936)
-
-> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=false >}}
-  <p>Title</p>
-  {{< asciinema key="layering-04-autofs-config-20250611_1530" rows="50" font-size="smaller" poster="npt:1:06" loop=true >}}
+> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=true >}}
+  <p>CoreOS Image Layering Demo - Autofs Configuration</p>
+  {{< asciinema key="layering-04-autofs-config-20250611_1530" rows="50" font-size="smaller" poster="npt:0:04" loop=true >}}
+  <a href=https://asciinema.org/a/722936>Asciinema</a>
   {{</collapsable>}}
-
 
 # Test
 
 # Demo 
-
-> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=false >}}
-  <p>Managing MachineConfig resources with Butane and Make</p>
-  {{< asciinema key="machineconfig-20250529" rows="50" font-size="smaller" poster="npt:1:06" loop=true >}}
-  {{</collapsable>}}
 
 # Summary
 
