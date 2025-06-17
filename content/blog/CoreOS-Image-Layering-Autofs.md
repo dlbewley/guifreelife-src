@@ -1,5 +1,5 @@
 ---
-title: "CoreOS Image Layering Autofs - Title WIP"
+title: "OpenShift CoreOS On-Cluster Image Layering"
 date: 2025-06-12
 banner: /images/layering-cake-trans.png
 layout: post
@@ -12,16 +12,19 @@ tags:
   - openshift
   - kubernetes
   - operators
-description: CoreOS On-cluster Image Layering in OpenShift 4.19 allows modifications to node operating system. This detailed walk through installs and configures autofs, enabling automatic filesystem mounting across cluster nodes.
+description: CoreOS On-cluster Image Layering in OpenShift 4.19 allows modifications to node the operating system. This detailed walk through customizes the node operating system, adding RPMs.
 ---
 
-CoreOS On-cluster Image Layering in OpenShift 4.19 allows modifications to node operating system. This detailed walk through installs and configures autofs, enabling automatic filesystem mounting across cluster nodes.
+CoreOS On-cluster Image Layering in OpenShift 4.19 allows modifications to node the operating system. This detailed walk through customizes the node operating system, adding RPMs.
+In part 2 we will configure autofs and enabling automatic filesystem mounting across cluster nodes.
 
 <!--more-->
 
+# Background
+
 RHEL CoreOS is a container optimized operating system which is distributed via a container image. OpenShift leverages this capability to keep the operating system up to date without the need to apply individual patches to nodes in the cluster.
 
-Typically software will not be installed directly into the host operating system, but instead provided in images running in containers on top of Kubernetes. There are cases where it may be desirable to add packages directly to the operating system, however.
+Typically software will not be installed directly into the host operating system, but instead provided via images running in containers managed by Kubernetes. There are cases where it may be desirable to add packages directly to the operating system, however.
 
 The RHCOS [Image Layering][3] feature of OpenShift allows to the ability to modify the container image that provides the CoreOS operating system image, in a manner compatible with the automated node lifecycle management performed by OpenShift.
 
@@ -41,16 +44,18 @@ By adding the RPMs to the container image the nodes are running.
 
 ## Understanding On-Cluster Layering
 
-On-Cluster Layering or OCL is a GA feature in OpenShift 4.19 with shipped v1 of the `MachineOSConfig` API.
+Out-of-cluster layering made it possible to build and host a custom CoreOS image for nodes on a n external registry.
 
-The `MachineOSConfig` resource is key to producing the layered image, and it specifies the following parameters:
+On-Cluster Layering or OCL is a GA feature in OpenShift 4.19 which shipped v1 of the `MachineOSConfig` API and enables the building and managment of custom images to take place entirely within the cluster.
 
-* Associated to a single MachineConfigPool
-* Location push & pull the layered image
-* The push and pull secrets to use with registries
-* A Containerfile (Dockerfile) to build the image
+The `MachineOSConfig` resource defines the production of the layered image. It specifies the following parameters:
 
-The Containerfile will be embeded, but on it's own it may look like this:
+* Association to a single `MachineConfigPool`
+* Registry location to push & pull the layered image
+* The regsitry credentials required to push and pull
+* Containerfile (Dockerfile) to build the image
+
+The Containerfile will be embeded in the MachineOSConfig, but on it's own it may look like this:
 
 ```dockerfile
 FROM configs AS final
@@ -60,6 +65,10 @@ RUN dnf install -y \
         && dnf clean all \
         && ostree container commit
 ```
+
+> ⭐ **Tip**
+>
+> Using a custom layered image does have a few caveats relative to conditions which require more reboots during configuration updates than with the default image. For example, making changes to the `MachineConfig` will trigger an image rebuild. _Pausing the `MachineConfigPool` while making changes can minimize reboots._
 
 # Preparing for On-Cluster Image Layering
 
@@ -123,9 +132,9 @@ Testing revealed that the same pull secret is used for pulling the standard imag
 
 ### Demo
 
-_👀 Watch a demonstration of above._
+👀 _Watch a demonstration of above._
 
-> {{< collapsable prompt="📺 **ASCII Screencast Demo of Pull and Push Secret Configuration**" collapse=true >}}
+> {{< collapsable prompt="📺 **ASCII Screencast Demo of Pull and Push Secret Configuration**" collapse=false >}}
   <p>CoreOS Image Layering Demo - Pull and Push Secrets</p>
   {{< asciinema key="layering-01-secrets-20250603_1502" rows="50" font-size="smaller" poster="npt:1:06" loop=true >}}
   <a href=https://asciinema.org/a/721881>Asciinema</a>, <a href=https://github.com/dlbewley/demo-autofs/blob/main/layering/demo-script-layering-01.sh>Script</a>
@@ -137,9 +146,9 @@ While it is possible to build the image and make it available the process is les
 
 ## Creating the worker-automount MachineConfigPool
 
-We need a way to associate the custom image with the nodes of our choosing. This will be done using the `MachineConfigPool` resources as shown below. This is also how we will associate the added configuration values a bit later.
+We need a way to associate the custom image with the nodes of our choosing. This will be done using the `MachineConfigPool` (MCP) resource as shown below. This is also how we will associate the added configuration values a bit later. You can learn a bit more about MachineConfigPools in [this blog post][13].
 
-```yaml {{linenos=inline hl_lines=[8,15,16,19]}}
+```yaml {{linenos=inline hl_lines=[8,15,16,19,20]}}
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineConfigPool
 metadata:
@@ -163,18 +172,22 @@ spec:
 ```
 _[MachineConfigPool][11]_
 
-> 🔧 **Create the worker-automount MachineConfigPool**
-  ```bash
-  oc create -f machineconfigpool.yaml
-  ```
+On line 19 we say that this MCP will be applied to nodes that are labeled with "node-role.kubernetes.io/worker-automount", and on lines 15 and 16 we specify that any `MachineConfig` resources labeled with either "worker" or "worker-automount" will be used for those machines. Also notice on line 20 that we are defining this pool as "paused" by default.
+
+> 🔧 **Creating the "worker-automount" MachineConfigPool**
+> ```bash
+> oc create -f machineconfigpool.yaml
+> ```
+
+Because we are not creating any MachineConfig resources [yet][14] the nodes in this pool will be configured just like any existing worker nodes, _except_ once we create the MachineOSConfig below the nodes in the pool will also have our custom image applied.
 
 ## Creating the worker-automount MachineOSConfig
 
-Here is the `MachineOSConfig` which will be associated with the worker-automount `MachineConfigPool` above. It will define how to build the image.
+Here is the `MachineOSConfig` which will be associated with the worker-automount `MachineConfigPool` above. This will define how to build the image.
 
 Using the pull secrets we created above, it will push the image to the registry at the location specified.
 
-```yaml {{linenos=inline hl_lines=[7,21,24,25]}}
+```yaml {{linenos=inline hl_lines=[7,9,21,24,25]}}
 apiVersion: machineconfiguration.openshift.io/v1
 kind: MachineOSConfig
 metadata:
@@ -203,29 +216,33 @@ spec:
 ```
 _[MachineOSConfig][4]_
 
+> 🔧 **Creating the "worker-automount" MachineOSConfig**
+> ```bash
+> oc create -f machineosconfig.yaml
+> ```
 
-> ⭐ **TIP**
-> Using a custom layered image does have a few caveats relative to conditions which require more reboots during configuration updates than with the default image. For example, making changes to MachineCOnfigs will trigger an image rebuild. Pausing the machineconfigPool while making changes can minimize reboots.
+On line 7 we are specifying that this MachineOSConfig is to be applied to the "worker-automount" pool. In the content section we have the Containerfile instructions. On line 21 and 24 we reference the secrets holding the necessary registry credentials, and line 25 defines where the built image will be pushed to.
 
+🌳 **In the Weeds**
 
-This step demonstrates:
-* Explaining MachineConfigPools and how they associate nodes with MachineConfigs
-* Examining existing MCPs and their node selectors
-* Showing how MCPs reference multiple MachineConfigs via labels
-* Exploring the rendered MachineConfig that combines individual configs
-* Demonstrating how rendered configs contain systemd units, files, and OS image info
-* Creating a new worker-automount MachineConfigPool for autofs nodes
-* Explaining how worker-automount will get both worker and worker-automount configs
-* Creating a MachineOSConfig to build custom image with added RPMs
-* Monitoring the MachineOSBuild process and job completion
-* Verifying the custom image is associated with the worker-automount pool
+Here is what happens when you create a `MachineOSConfig` named "worker-automount":
+* creates a `deployment/machine-os-builder` which creates a `pod/machine-os-builder-<hash>`
+* `pod/machine-os-builder-<hash>` waits to acquire a lease
+* `pod/machine-os-builder-<hash>` creates a `machineosbuild/worker-automount-<hash>` resource  
+* `pod/machine-os-builder-<hash>` creates a `job/build-worker-automount-<hash>`
+* `job/build-worker-automount-<hash>`  creates a `pod/build-worker-automount-<hash>` to perform the build.
+* ^ This pod log shows the build progress.
 
+Once the image is pushed it is visible in an `ImageStream` in the openshift-machine-config-operator namespace.
+
+```bash
+oc get describe imagestream/os-image -n openshift-machine-config-operator
+...
+```
 
 ### Demo
 
-_👀 Watch a demonstration of above._
-
-
+👀 _Watch a demonstration of above._
 
 > {{< collapsable prompt="📺 **ASCII Screencast Demo of MachineConfigPool and Custom Image Setup**" collapse=true >}}
   <p>CoreOS Image Layering Demo - Machine Config Pool and MachineOSConfig</p>
@@ -238,11 +255,41 @@ _👀 Watch a demonstration of above._
 
 > ⚠️ **Warning!**
 >
-> Until [🐛 OCPBUGS-56648][5] is repaired, it is important that the custom image is deployed to nodes before any MachineConfigs that refer to new components are added. i.e. Do not enable autofs until the layered image is fully deployed. _A possible workaround would be to make this change in the Containerfile._
+> Until [🐛 OCPBUGS-56648][5] is repaired, it is important that the custom image is deployed to nodes before any MachineConfigs that refer to new components [are added][14]. eg. Do not `systemctl enable autofs` until the layered image having autofs installed is fully deployed.
+>
+> _Another possible workaround would be to make this change in the Containerfile._
+>
 
-## Node Imaging and Configuration
+## Node Imaging
 
-[demo-script-layering-03.sh](demo-script-layering-03.sh)
+With the necessary changes layered onto the CoreOS image and that image assocated to a pool, the next step is to add a node to the pool and cause the CoreOS image to be redeployed.
+
+This is done by labeling the node with the role variable the pool is using to select nodes.
+
+> 🔧 **Adding a Node to the "worker-automount" MachineConfigPool**
+> ```bash
+> # 🎯 Select a test node
+> TEST_WORKER=hub-v57jl-worker-0-jlvfs
+>
+> # 🏷️  Adjust node-role label & move it to worker-automount pool
+> oc label node $TEST_WORKER node-role.kubernetes.io/worker- node-role.kubernetes.io/worker-automount=''
+>
+> # 🔍 worker-automount MCP now has a node count of 1
+> oc get mcp -o custom-columns='NAME:.metadata.name, MACHINECOUNT:.status.machineCount'
+> NAME               MACHINECOUNT
+> master             3
+> worker             7
+> worker-automount   1
+> ```
+
+Now the update can be triggered by unpausing the pool. After this change, any further changes that affect the "worker-automount" MachineConfigPool will automatically be applied.
+
+> 🔧 Unpausing the MCP to begin updates
+> ```bash
+> oc patch machineconfigpool/worker-automount \
+>     --type merge --patch '{"spec":{"paused":false}}'"
+> ```
+
 
 This step demonstrates:
 * Checking cluster state with `oc get clusterversion`, `oc get nodes`, and `oc get mcp`
@@ -255,41 +302,19 @@ This step demonstrates:
 * Verifying successful update via MCP and node status checks
 * Confirming autofs RPM is installed on the updated node
 
-_👀 Watch a demonstration of above._
+👀 _Watch a demonstration of above._
 
-> {{< collapsable prompt="📺 **ASCII Screencast**" collapse=true >}}
+> {{< collapsable prompt="📺 **ASCII Screencast Demo of Applying Custom Image to Nodes**" collapse=true >}}
   <p>CoreOS Image Layering Demo - Node Imaging</p>
   {{< asciinema key="layering-03-imaging-20250611_1148" rows="50" font-size="smaller" poster="npt:0:11" loop=true >}}
-  <a href=https://asciinema.org/a/722913>Asciinema</a>
+  <a href=https://asciinema.org/a/722913>Asciinema</a>,
+ <a href=https://github.com/dlbewley/demo-autofs/blob/main/layering/demo-script-layering-03.sh>Script</a>
   {{< /collapsable >}}
 
-
-## Autofs Configuration
-
-This step demonstrates:
-* Regenerating machineconfigs with `make`
-* Applying machineconfigs with `oc apply -k`
-* Observing the MCP go into an updating state
-* Waiting for the node to reboot and MCP to be updated
-* Verifying the home directory is an NFS mount
-
-### Demo
-
-_👀 Watch a demonstration of above._
-
-> {{< collapsable prompt="📺 **ASCII Screencast Demo of Applying the Custom Image to Nodes**" collapse=true >}}
-  <p>CoreOS Image Layering Demo - Autofs Configuration</p>
-  {{< asciinema key="layering-04-autofs-config-20250611_1530" rows="50" font-size="smaller" poster="npt:0:04" loop=true >}}
-  <a href=https://asciinema.org/a/722936>Asciinema</a>, <a href=https://github.com/dlbewley/demo-autofs/blob/main/layering/demo-script-layering-04.sh>Script</a>
-  {{< /collapsable >}}
-
-
-# Testing AutoFS
-
-## Demo 
 
 # Summary
 
+Now that we have added the RPMs to support it, be sure to checkout [part 2][14] where we will configure and use autofs.
 
 # References
 
@@ -313,3 +338,6 @@ _👀 Watch a demonstration of above._
 [9]: <https://github.com/dlbewley/demo-autofs/blob/main/layering/readme.md#provisioning-an-image-registry-to-hold-layered-image> "Image Registry Configuration Notes"
 [10]: <https://kubernetes.io/docs/concepts/storage/volumes/#hostpath> "Kubernetes hostPath Volumes"
 [11]: <https://github.com/dlbewley/demo-autofs/blob/main/layering/machineconfigpool.yaml> "MachineConfigPool"
+[12]: <https://issues.redhat.com/browse/OCPBUGS-56279> "applying on cluster layering fails with Old and new refs are equal - 4.18 problem i had"
+[13]: {{< ref "/blog/Managing-OpenShift-Machine-Configuration-with-Butane-and-Ignition.md" >}} "Managing MachineConfigs with Butane"
+[14]: {{< ref "/coming-soon.md" >}} "Configuring AutoFS on OpenShift"
