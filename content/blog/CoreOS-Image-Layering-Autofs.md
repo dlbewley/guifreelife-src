@@ -1,13 +1,11 @@
 ---
-title: "OpenShift CoreOS On-Cluster Image Layering"
-date: 2025-06-12
+title: "OpenShift CoreOS On-Cluster Custom Node Image Layering"
+date: 2025-06-20
 banner: /images/layering-cake-trans.png
 layout: post
 mermaid: false
 asciinema: true
-draft: true
 tags:
-  - draft
   - coreos
   - openshift
   - kubernetes
@@ -16,7 +14,7 @@ description: CoreOS On-cluster Image Layering in OpenShift 4.19 allows modificat
 ---
 
 CoreOS On-cluster Image Layering in OpenShift 4.19 allows modifications to node the operating system. This detailed walk through customizes the node operating system, adding RPMs.
-In part 2 we will configure autofs and enabling automatic filesystem mounting across cluster nodes.
+In [part 2][14] we will configure autofs and enable automatic filesystem mounting across cluster nodes.
 
 <!--more-->
 
@@ -34,7 +32,7 @@ The RHCOS [Image Layering][3] feature of OpenShift allows to the ability to modi
 
 I want to run the automount daemon on cluster nodes so I can expose dynamic NFS mounts from existing infrastructure to OpenShift workloads. Once the mounts are trigged by accessing a path on the host, the mounted filesystem can be exposed to pods via a [hostPath volume][10], but the `autofs` RPM is not on installed on the nodes.
 
-I could run automountd [in a container][6], but that presents some significant challenges like also configuring and accessing `sssd` for user and automount lookups in LDAP, propagating the mounts back to the host, and properly surviving pod destruction. Having automountd running directly in the node operating system is the prefered solution in this case.
+I could run automountd [in a container][6], but that presents some challenges like also configuring and accessing `sssd` for user and automount lookups in LDAP, propagating the mounts back to the host. This would also make me responsible for building and maintaining the image that provides autofs. Having automountd running directly in the node operating system is the prefered solution in this case.
 
 So how do I get the autofs and related RPMs installed on the nodes?
 
@@ -251,7 +249,7 @@ oc get describe imagestream/os-image -n openshift-machine-config-operator
   {{< /collapsable >}}
 
 
-# Deploying and Configuring
+# Deploying the Layered Image
 
 > ⚠️ **Warning!**
 >
@@ -290,17 +288,26 @@ Now the update can be triggered by unpausing the pool. After this change, any fu
 >     --type merge --patch '{"spec":{"paused":false}}'"
 > ```
 
+With the pool unpaused, the MachineConfigDaemon running on nodes in the pool will begin applying the rendered machineconfig by cordoning and draining the node. The node will then reboot and 
 
-This step demonstrates:
-* Checking cluster state with `oc get clusterversion`, `oc get nodes`, and `oc get mcp`
-* Selecting a test worker node and setting it as $TEST_WORKER
-* Relabeling the node from worker to worker-automount role
-* Verifying the worker-automount MCP shows 1 node
-* Unpausing the MCP to trigger the node update
-* Monitoring the node as it drains and reboots
-* Watching Machine Config Daemon logs for update completion
-* Verifying successful update via MCP and node status checks
-* Confirming autofs RPM is installed on the updated node
+```bash
+MCD_POD=$(oc get pods -A -l k8s-app=machine-config-daemon --field-selector=spec.host=$TEST_WORKER -o name)
+
+oc logs -n openshift-machine-config-operator -f $MCD_POD
+... 👀 look for something like this at the end...
+I0611 17:26:38.595644    3512 update.go:2786] "Validated on-disk state"
+I0611 17:26:38.607920    3512 daemon.go:2340] Completing update to target MachineConfig: rendered-worker-automount-5ffdffe14badbefb26817971e15627a6 / Image: image-registry.openshift-image-registry.svc:5000/openshift-machine-config-operator/os-image@sha256:326d0638bb78f372e378988a4bf86c46005ccba0b269503ee05e841ea127945e
+I0611 17:26:48.790395    3512 update.go:2786] "Update completed for config rendered-worker-automount-5ffdffe14badbefb26817971e15627a6 and node has been successfully uncordoned"
+```
+
+Once the node is back and ready check to confirm that the autofs rpm is now present.
+
+```bash
+# ✅ Verify that the autofs RPM now exists on the node
+oc debug node/$TEST_WORKER -- chroot /host rpm -q autofs 2>/dev/null
+
+autofs-5.1.7-60.el9.x86_64
+```
 
 👀 _Watch a demonstration of above._
 
@@ -311,10 +318,13 @@ This step demonstrates:
  <a href=https://github.com/dlbewley/demo-autofs/blob/main/layering/demo-script-layering-03.sh>Script</a>
   {{< /collapsable >}}
 
-
 # Summary
 
-Now that we have added the RPMs to support it, be sure to checkout [part 2][14] where we will configure and use autofs.
+On cluster iamge layering allows for customizing of the OpenShift node operating system with the responsibility of maintaining the image adeptly managed by the cluster its self.
+
+🚀 Now that we have added the RPMs to support it, we can proceed to configure autofs by teaching `sssd` how to talk to our LDAP server to look up users and automount maps, and by accounting for CoreOS requirements.
+
+Be sure to checkout [part 2 of this series][14] where we will do exactly that!
 
 # References
 
@@ -329,12 +339,12 @@ Now that we have added the RPMs to support it, be sure to checkout [part 2][14] 
 
 [1]: <https://github.com/dlbewley/demo-autofs> "Demo Github Repo"
 [2]: <https://asciinema.org/a/721881> "Asciinema Demo Recording"
-[3]: <https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/machine_configuration/mco-coreos-layering> "RHCOS image layering Docs"
+[3]: <https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/machine_configuration/mco-coreos-layering> "RHCOS image layering Docs"
 [4]: <https://github.com/dlbewley/demo-autofs/blob/main/layering/machineosconfig.yaml> "MachineOSConfig"
 [5]: <https://issues.redhat.com/browse/OCPBUGS-56648> "Bug: layered image update loops on failure to find systemd unit files"
 [6]: <https://github.com/dlbewley/demo-autofs/tree/main/automount> "Automount in a container"
 [7]: <https://github.com/dlbewley/demo-autofs/tree/main/layering> "Automount on the node"
-[8]: <https://docs.redhat.com/en/documentation/openshift_container_platform/4.18/html/registry/setting-up-and-configuring-the-registry#configuring-registry-storage-baremetal> "Configuring the OpenShift Image Registry"
+[8]: <https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/registry/setting-up-and-configuring-the-registry#configuring-registry-storage-baremetal> "Configuring the OpenShift Image Registry"
 [9]: <https://github.com/dlbewley/demo-autofs/blob/main/layering/readme.md#provisioning-an-image-registry-to-hold-layered-image> "Image Registry Configuration Notes"
 [10]: <https://kubernetes.io/docs/concepts/storage/volumes/#hostpath> "Kubernetes hostPath Volumes"
 [11]: <https://github.com/dlbewley/demo-autofs/blob/main/layering/machineconfigpool.yaml> "MachineConfigPool"
