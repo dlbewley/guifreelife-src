@@ -17,7 +17,8 @@ disqusShortname = "dlbewleygithubio"
 googleAnalytics = "G-39TSW9349X"
 
 # Define the number of posts per page
-paginate = 10
+[pagination]
+pagerSize = 10
 
 [menu]
 
@@ -101,7 +102,7 @@ paginate = 10
     latitude = "37.802663456"
     longitude = "-122.26916559"
 
-    # Style options: default (light-blue), blue, green, marsala, pink, red, turquoise, violet
+    # Style options: default (light-blue), blue, green, marsala, pink, red, turquoise, violet
     style = "turquoise"
 
     # Since this template is static, the contact form uses www.formspree.io as a
@@ -117,7 +118,7 @@ paginate = 10
     # - test a dummy email yourself
     # - you're done. Happy mailing!
     #
-    # Enable the contact form by entering your Formspree.io endpoint url
+    # Enable the contact form by entering your Formspree.io endpoint url
     # pretty much just a spam magnet
     #formspree_action = "https://formspree.io/f/mvodpggp"
     contact_form_ajax = false
