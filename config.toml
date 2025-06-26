@@ -63,16 +63,16 @@ pagerSize = 10
     pre = "<i class='fab fa-2x fa-gitlab'></i>"
 
 [[menu.topbar]]
-    weight = 2
+    weight = 3
     name = "LinkedIn"
     url = "http://linkedin.com/in/dalebewley"
     pre = "<i class='fab fa-2x fa-linkedin'></i>"
 
-[[menu.topbar]]
-    weight = 3
-    name = "Twitter"
-    url = "http://twitter.com/dlbewley"
-    pre = "<i class='fab fa-2x fa-twitter'></i>"
+#[[menu.topbar]]
+#    weight = 3
+#    name = "Twitter"
+#    url = "http://twitter.com/dlbewley"
+#    pre = "<i class='fab fa-2x fa-twitter'></i>"
 
 [[menu.topbar]]
     weight = 4
@@ -91,8 +91,8 @@ pagerSize = 10
     toc = true
 
     # Social media
-    facebook_site = "" # the Facebook handle of your site ('https://www.facebook.com/HANDLE')
-    twitter_site = "dlbewley" # the Twitter handle of your site (without the '@')
+    #facebook_site = "" # the Facebook handle of your site ('https://www.facebook.com/HANDLE')
+    #twitter_site = "dlbewley" # the Twitter handle of your site (without the '@')
     default_sharing_image = "img/sharing-default.png"
 
     # Google Maps widget: If `googleMapsApiKey` is not set, no key will be passed to Google (which likely results in a broken map widget).
