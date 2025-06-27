@@ -6,4 +6,5 @@ description: >
     <li>Implement</li>
     <li>Automate</li>
   </ul>
-image: "images/openshift-openstack-install-network-01.png"
+# image: "images/openshift-openstack-install-network-01.png"
+image: "/images/machineconfigs-butane.png"
