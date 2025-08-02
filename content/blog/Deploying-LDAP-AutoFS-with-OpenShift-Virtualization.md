@@ -75,7 +75,7 @@ Instead of the Cluster or Pod network, each VM will be have a NIC bound via a Ne
 
 ```mermaid
 graph LR;
-    nad-1924 ==> vlan-1924
+    nad-1924 <--> vlan-1924
     vlan-1924[🛜 VLAN 1924<br>192.168.4.0/24<br>]:::vlan-1924;
 
     subgraph Physical["Physical"]
@@ -90,9 +90,9 @@ graph LR;
       end
 
 
-      node1-eth0 --> vlan-1924
-      node2-eth0 --> vlan-1924;
-      node3-eth0 --> vlan-1924;
+      node1-eth0 ==> vlan-1924
+      node2-eth0 ==> vlan-1924;
+      node3-eth0 ==> vlan-1924;
     end
 
     subgraph Virtual["Virtual"]
@@ -120,7 +120,7 @@ graph LR;
 
 
 
-    classDef node-eth fill:#00ffff,stroke:#333,stroke-width:2px;
+    classDef node-eth fill:#00dddd,stroke:#333,stroke-width:2px;
     classDef vm-eth fill:#00ffff,stroke:#444,stroke-width:2px,stroke-dasharray: 1 1;
 
 
@@ -130,12 +130,15 @@ graph LR;
 
     classDef networks fill:#cdd,stroke-width:0px
 
-    style Localnets fill:#00dddd,stroke:#333,stroke-width:2px;
-    style Physical file:#fff,stroke:#333,stroke-width:3px
+    style Localnets stroke-width:0px;
+    style Physical fill:#fff,stroke:#333,stroke-width:3px
     style Virtual fill:#fff,stroke:#333,stroke-width:2px,stroke-dasharray: 5 5;
 
-    classDef servers stroke-width:3px
+    classDef servers stroke-width:3px,stroke-dasharray: 5 5;
     class NFS-Server,LDAP-Server,Client servers
+
+    classDef nodes stroke-width:3px
+    class node1,node2,node3 nodes
 
 ```
 
