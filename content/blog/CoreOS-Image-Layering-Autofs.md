@@ -327,7 +327,7 @@ On cluster iamge layering allows for customizing of the OpenShift node operating
 
 🚀 Now that we have added the RPMs to support it, we can proceed to configure autofs by teaching `sssd` how to talk to our LDAP server to look up users and automount maps, and by accounting for CoreOS requirements.
 
-Be sure to checkout [part 2 of this series][14] where we will do exactly that!
+Be sure to checkout [part 2 of this series][14] where we will us OpenShift Virtualization to deploy the supporting LDAP and NFS infrastructure and a VM client for testing. In [part 3](/coming-soon.md) we will return to access autofs from containers.
 
 # References
 
@@ -353,5 +353,5 @@ Be sure to checkout [part 2 of this series][14] where we will do exactly that!
 [11]: <https://github.com/dlbewley/demo-autofs/blob/main/layering/machineconfigpool.yaml> "MachineConfigPool"
 [12]: <https://issues.redhat.com/browse/OCPBUGS-56279> "applying on cluster layering fails with Old and new refs are equal - 4.18 problem i had"
 [13]: {{< ref "/blog/Managing-OpenShift-Machine-Configuration-with-Butane-and-Ignition.md" >}} "Managing MachineConfigs with Butane"
-[14]: {{< ref "/coming-soon.md" >}} "Configuring AutoFS on OpenShift"
+[14]: {{< ref "/blog/Deploying-LDAP-AutoFS-with-OpenShift-Virtualization.md" >}} "Configuring AutoFS on OpenShift"
 [15]: <https://github.com/openshift/machine-config-operator> "Machine Config Operator"
