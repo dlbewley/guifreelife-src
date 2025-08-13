@@ -48,7 +48,7 @@ It's important to note that a host NIC can not be assigned to both an OVS Bridge
 Here we create a Linux bridge called `br-trunk` on a dedicated NIC called `ens256`.
 
 >  📓 **`NodeNetworkConfigurationPolicy` to create Linux Bridge `br-trunk`**
->  If ens256 is not in every host you'll need to add add a NodeSelector. 
+>  If ens256 is not in every host you'll need to add add a NodeSelector.
 >  [ref](https://github.com/dlbewley/demo-virt/blob/main/demos/vgt/components/br-trunk/linux-bridge/nncp.yaml)
 
 * {{< collapsable prompt="br-trunk nncp.yaml" collapse=false md=true >}}
@@ -117,6 +117,42 @@ spec:
 ```
 {{< /collapsable >}}
 
+⭐ **Important Update 2025-08** _Changes for OpenShift 4.19_
+
+_As of OpenShift 4.19 IP forwarding is disabled on each NIC by default.
+You must enable IP forwarding for the NIC tied to the Linux bridge._
+
+>  📓 **`Tuned` profile to enable IP forwarding on physical NIC**
+>  [ref](https://github.com/dlbewley/demo-virt/blob/main/demos/vgt/components/br-trunk/linux-bridge/tuned.yaml)
+
+* {{< collapsable prompt="tuned.yaml" collapse=false md=true >}}
+```yaml {linenos=inline}
+---
+apiVersion: tuned.openshift.io/v1
+kind: Tuned
+metadata:
+  name: ip-forward-linux-bridge
+  namespace: openshift-cluster-node-tuning-operator
+spec:
+  profile:
+    - name: ip-forward-linux-bridge
+      data: |
+        [main]
+        summary=Add IP forwarding to interface hosting linux bridge
+
+        [sysctl]
+        # update NIC name as appropriate
+        net.ipv4.conf.ens256.forwarding=1
+  recommend:
+    - profile: ip-forward-linux-bridge
+      priority: 10
+      match:
+        # adjust selector in the overlay kustomization.yaml
+        - label: node-role.kubernetes.io/worker
+          value: ''
+```
+{{< /collapsable >}}
+
 # Demos
 
 ## Host to Guest VLAN Tagging
@@ -131,7 +167,7 @@ In this demo, the provider (meaning existing outside the OpenShift cluster) VLAN
 
 ## Guest to Guest VLAN Tagging
 
-When the VM NIC is attached via Linux Bridge it also becomes possible to make up arbitrary VLAN tags to trunk between virtual machines. In otherwords you can make up your own VLAN tags and trunk them peer-to-peer between VMs. 
+When the VM NIC is attached via Linux Bridge it also becomes possible to make up arbitrary VLAN tags to trunk between virtual machines. In otherwords you can make up your own VLAN tags and trunk them peer-to-peer between VMs.
 
 This demo shows made up VLANs 222 and 333 being created from thin air and passed between 2 VMs via the same `trunk` attachment to the `br-trunk` Linux Bridge used above.
 
@@ -213,7 +249,7 @@ More on UDN in a future post.
 [6]: <https://github.com/dlbewley/demo-virt/tree/main/demos/vgt> "Demo Source"
 [7]: <https://issues.redhat.com/browse/RFE-6831> "RFE Support Trunking on OVN-K8s Localnet"
 [8]: <https://developers.redhat.com/articles/2022/04/06/introduction-linux-bridging-commands-and-features> "Linux Bridge"
-[9]: {{< ref "/blog/Open-Virtual-Network-Inspection-on-OpenShift.md" >}} "Open Virtual Network Inspection on OpenShift" 
+[9]: {{< ref "/blog/Open-Virtual-Network-Inspection-on-OpenShift.md" >}} "Open Virtual Network Inspection on OpenShift"
 [10]: <https://docs.redhat.com/en/documentation/red_hat_openstack_services_on_openshift/18.0/html/managing_networking_resources/vlan-aware-instances_rhoso-mngnet#vlan-aware-instances_rhoso-mngnet> "OpenStack VLAN Aware Instances"
 [11]: <https://en.wikipedia.org/wiki/Data_link_layer>
 [12]: <https://en.wikipedia.org/wiki/Ethernet>
