@@ -1,6 +1,6 @@
 ---
 title: "Open Virtual Networking with OpenShift Virtualization"
-date: 2024-05-26
+date: 2025-09-20
 banner: /images/cat-loves-ovn.png
 # banner: /images/cat-loves-nncp.png
 layout: post
@@ -22,7 +22,7 @@ Virtual machine workloads are migrating to KubeVirt and OpenShift Virtualization
 
 # Open Virtual Network
 
-Open Virtual Network enables a high level representation of a software defined network. While virtual switches have been used in OpenShift for quite some time they were managed individualy, the method used to program and coordinate virtual switching and routing is now orchestrated by OVN technology. 
+Open Virtual Network enables a high level representation of a software defined network. While virtual switches have been used in OpenShift for quite some time they were managed individualy, the method used to program and coordinate virtual switching and routing is now orchestrated by OVN technology.
 
 <!--
 Demo Script:
@@ -42,13 +42,22 @@ This means anytime you seek to understand how to accomplish a task in Kubernetes
 > {{< collapsable prompt="⭐ **Pro Tip:** Identify resource definitions with the `oc api-resources` command and grep filter." collapse=true md=true >}}
 Keep in mind that the same name may be used by more than one API. This can be disambiguated with the `--api-group` argument.
 ```bash {linenos=inline,hl_lines=[5,11,12]}
+# 4.19.9
 $  oc api-resources | grep -i network | sort
+adminnetworkpolicies                       anp                                                                                    policy.networking.k8s.io/v1alpha1                     false        AdminNetworkPolicy
+baselineadminnetworkpolicies               banp                                                                                   policy.networking.k8s.io/v1alpha1                     false        BaselineAdminNetworkPolicy
+clusteruserdefinednetworks                                                                                                        k8s.ovn.org/v1                                        false        ClusterUserDefinedNetwork
 egressrouters                                                                                                                     network.operator.openshift.io/v1                      true         EgressRouter
+gatewayclasses                             gc                                                                                     gateway.networking.k8s.io/v1                          false        GatewayClass
+gateways                                   gtw                                                                                    gateway.networking.k8s.io/v1                          true         Gateway
+grpcroutes                                                                                                                        gateway.networking.k8s.io/v1                          true         GRPCRoute
+httproutes                                                                                                                        gateway.networking.k8s.io/v1                          true         HTTPRoute
 ingressclasses                                                                                                                    networking.k8s.io/v1                                  false        IngressClass
 ingresses                                  ing                                                                                    networking.k8s.io/v1                                  true         Ingress
 multi-networkpolicies                      multi-policy                                                                           k8s.cni.cncf.io/v1beta1                               true         MultiNetworkPolicy
 network-attachment-definitions             net-attach-def                                                                         k8s.cni.cncf.io/v1                                    true         NetworkAttachmentDefinition
 networkaddonsconfigs                                                                                                              networkaddonsoperator.network.kubevirt.io/v1          false        NetworkAddonsConfig
+networkfenceclasses                                                                                                               csiaddons.openshift.io/v1alpha1                       false        NetworkFenceClass
 networkfences                                                                                                                     csiaddons.openshift.io/v1alpha1                       false        NetworkFence
 networkmaps                                                                                                                       forklift.konveyor.io/v1beta1                          true         NetworkMap
 networkpolicies                            netpol                                                                                 networking.k8s.io/v1                                  true         NetworkPolicy
@@ -59,6 +68,8 @@ nodenetworkconfigurationpolicies           nncp                                 
 nodenetworkstates                          nns                                                                                    nmstate.io/v1beta1                                    false        NodeNetworkState
 operatorpkis                                                                                                                      network.operator.openshift.io/v1                      true         OperatorPKI
 podnetworkconnectivitychecks                                                                                                      controlplane.operator.openshift.io/v1alpha1           true         PodNetworkConnectivityCheck
+referencegrants                            refgrant                                                                               gateway.networking.k8s.io/v1beta1                     true         ReferenceGrant
+userdefinednetworks                                                                                                               k8s.ovn.org/v1                                        true         UserDefinedNetwork
 ```
 {{< /collapsable >}}
 
@@ -134,7 +145,7 @@ There are many, but these two are our focus here.
   * `layer2` - Define an overlay network (eg a private replication or healthcheck network)
   * `layer3` - Define a routeable overlay network
 
-We are 
+We are
 https://github.com/ovn-org/ovn-kubernetes/blob/master/docs/multi-homing.md#configuring-secondary-networks
 
 Use the `ovn-k8s-cni-overlay` plugin type and the `localnet` topology.
@@ -231,10 +242,10 @@ spec:
   # via NNCP in an OVN bridge-mapping
   config: |-
     {
-      "cniVersion": "0.3.1", 
+      "cniVersion": "0.3.1",
       "name": "vlan-1924",
-      "type": "ovn-k8s-cni-overlay", 
-      "topology": "localnet", 
+      "type": "ovn-k8s-cni-overlay",
+      "topology": "localnet",
       "netAttachDefName": "default/vlan-1924",
       "vlanID": 1924,
       "ipam": {}
@@ -259,7 +270,7 @@ spec:
       bridge-mappings:
         - localnet: vlan-1924
           bridge: br-vmdata
-          state: present 
+          state: present
 ```
 {{< /collapsable >}}
 
@@ -612,4 +623,4 @@ It is important to understand that the name found in the multus config defines a
 [10]: <https://github.com/ovn-org/ovn-kubernetes/blob/master/docs/features/multiple-networks/multi-homing.md> "OVN-Kubernetes Multihoming"
 [11]: <https://ovn-kubernetes.io/> "OVN-Kubernetes"
 [12]: <https://github.com/k8snetworkplumbingwg/multus-cni> "Multus CNI"
-[13]: <https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model> "The Kubernetes Network Model" 
+[13]: <https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model> "The Kubernetes Network Model"
