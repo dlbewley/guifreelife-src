@@ -168,6 +168,30 @@ subgraph Node[Node Logical Open Virtual Network]
 ```
 {{< /collapsable >}}
 
+# Example OVN Commands
+
+* List logical switches
+
+```bash
+sh-5.1# ovn-nbctl --columns=name list Logical_Switch
+name                : ext_master-2
+name                : demo.frontend_frontend_ovn_layer2_switch
+name                : join
+name                : master-2
+name                : transit_switch
+name                : ext_demo.frontend_frontend_master-2
+
+sh-5.1# ovn-nbctl --bare --columns=name list logical_switch |sort -r -u
+transit_switch
+machine.net_ovn_localnet_switch
+join
+hub-v57jl-store-1-wqqb7
+ext_hub-v57jl-store-1-wqqb7
+cluster_udn_localnet.1926.dhcp_ovn_localnet_switch
+cluster_udn_localnet.1924_ovn_localnet_switch
+cluster_udn_localnet.1924.dhcp_ovn_localnet_switch
+```
+
 # Summary
 
 OpenShift uses OVN-Kuberenets as the CNI which enables a very flexible if not complex network architecture. It can be helpful to peer inside at times, and this post gave you a cheat sheet to do just that.
@@ -179,7 +203,8 @@ OpenShift uses OVN-Kuberenets as the CNI which enables a very flexible if not co
 * [OVN-Kubernetes][4]
 * [OVN-Kubernetes CNI Plugin][3] - github.com
 * [Container Network Interface Specification][2]
-* [My ovncli.sh script][6]
+* [My ovncli.sh script][6] - gist
+* [View OVS Bridge Mappings][7] - gist
 
 [1]: <https://www.ovn.org/en/> "OpenVirtualNetwork"
 [2]: <https://github.com/containernetworking/cni/blob/spec-v0.4.0/SPEC.md> "CNI v0.4.0 Specification"
@@ -187,3 +212,4 @@ OpenShift uses OVN-Kuberenets as the CNI which enables a very flexible if not co
 [4]: <https://ovn-kubernetes.io/> "OVN-Kubernetes"
 [5]: <https://www.openvswitch.org/> "Open Virtual Switch"
 [6]: <https://gist.github.com/dlbewley/b4d4c85931e7a9c03caf56db1a1a0d2e> "ovncli script"
+[7]: <https://gist.github.com/dlbewley/9a846ac0ebbdce647af0a8fb2b47f9d0> "View OVS Bridge Mappings"
