@@ -310,8 +310,8 @@ Once the VM boots we can login and examine the user data imported from the secre
 ```bash
 [root@client ~]# grep -A2 subscription /var/lib/cloud/instance/user-data.txt
 rh_subscription:
-  org: 99999999
-  activation-key: my-real-key
+  org: 12345678
+  activation-key: secret-key4me
 ```
 
 # References
