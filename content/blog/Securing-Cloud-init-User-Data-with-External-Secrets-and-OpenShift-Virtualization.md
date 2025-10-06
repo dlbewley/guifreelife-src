@@ -13,7 +13,7 @@ tags:
   - kubernetes
   - kustomize
   - virtualization
-description: Learn how to securely manage cloud-init user data in OpenShift Virtualization using External Secrets Operator and 1Password, keeping sensitive information out of git repositories.
+description: Learn how to securely manage cloud-init user data in OpenShift Virtualization using External Secrets Operator and 1Password.
 ---
 
 Storing Kubernetes resources in git for automated deployment promotes consistency, resilency, and accountability, but commiting secrets to git is risky and should be avoided. Use the External Secrets Operator to securely store cloud-init and other data, and sleep soundly!
