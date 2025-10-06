@@ -317,7 +317,7 @@ rh_subscription:
 
 # Summary
 
-By leveraging the [External Secrets Operator][3] and [Kustomize][6] we _safely_ deployed fully provisioned Virtual Machines to OpenShift using a single command, using 1Password for it's ubiquity and ease of setup. This pattern can be adapted for other secret secrets vault providers for robust secret management in production [OpenShift Virtualization][15] environments.
+By leveraging the [External Secrets Operator][3] and [Kustomize][6] we _safely_ deployed fully provisioned Virtual Machines to OpenShift using a single command. 1Password was selected for it's ubiquity and ease of setup as a provider. This pattern can be adapted for other vault providers for robust secret management in production [OpenShift Virtualization][15] environments.
 
 # References
 
