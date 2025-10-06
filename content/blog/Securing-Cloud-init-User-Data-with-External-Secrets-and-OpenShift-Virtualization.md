@@ -5,14 +5,13 @@ banner: /images/blog-external-secrets.png
 layout: post
 mermaid: true
 asciinema: true
-draft: true
 tags:
-  - draft
   - 1password
   - automation
   - security
   - openshift
   - kubernetes
+  - kustomize
   - virtualization
 description: Learn how to securely manage cloud-init user data in OpenShift Virtualization using External Secrets Operator and 1Password, keeping sensitive information out of git repositories.
 ---
