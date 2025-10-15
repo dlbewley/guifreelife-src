@@ -142,7 +142,16 @@ done
 
 > 📓 If you later make changes to the userData script you can update the copy in 1Password like this.
 > ```bash
-> vault=eso
+> # download current values from 1Password to working dir
+> for vm in client ldap nfs; do
+>     op read "op://${vault}/demo autofs ${vm}/userData" \
+>         --out-file=${vm}/base/scripts/userData
+> done
+> 
+> # make any needed changes
+> vi {client,ldap,nfs}/base/scripts/userData
+> 
+> # upload changes to 1Password 
 > for vm in client ldap nfs; do
 >   op item edit \
 >     --vault "$vault" \
@@ -150,6 +159,9 @@ done
 >     "demo autofs $vm" \
 >     "userData[file]=${vm}/base/scripts/userData"
 > done
+>
+> # remove all changes made to working dir
+> git checkout -- {client,ldap,nfs}/base/scripts/userData
 > ```
 
 Here is a view of the 1Password vault after uploading each of our `userData` scripts.
