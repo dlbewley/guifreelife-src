@@ -113,7 +113,6 @@ spec:
       "type": "bridge",
       "macspoofchk": false,
       "bridge": "br-trunk",
-      "netAttachDefName": "demo-vgt/trunk",
       "ipam": {}
     }
 ```
