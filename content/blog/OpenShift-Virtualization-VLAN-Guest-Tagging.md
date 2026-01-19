@@ -85,13 +85,16 @@ spec:
 ```
 {{< /collapsable >}}
 
-Next create a network attachment definition called `trunk` in the demo-vgt namespace. It will be a cnv-bridge type and reference the `br-trunk` interface just created above.
+Next create a network attachment definition called `trunk` in the demo-vgt namespace. It will use the [bridge CNI plugin][14] and reference the `br-trunk` interface just created above. By omitting a `vlan` ID parameter we will see all VLAN tags. Setting the VLAN ID to 0 has the same effect.
 
 >  📓 **`NetworkAttachmentDefinition` to form a an 802.1q trunk from a Linux Bridge to VM**
 >  [ref](https://github.com/dlbewley/demo-virt/blob/main/demos/vgt/components/trunk/linux-bridge/nad.yaml)
 
+> ⭐ **Important Update 2026-01** _[Bridge CNI][14] params bug_
+> - Earlier versions of this example erroneously used `vlanId: {}`. Screencast has not yet been updated.
+
 * {{< collapsable prompt="trunk nad.yaml" collapse=false md=true >}}
-```yaml {linenos=inline,hl_lines=[16,18,20]}
+```yaml {linenos=inline,hl_lines=[16,18]}
 ---
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
@@ -101,26 +104,25 @@ metadata:
   name: trunk
   namespace: demo-vgt
 spec:
-  # omitting vlanId on Linux Bridge results in all VLANs passed
+  # omitting vlan on Linux Bridge results in all VLANs passed
   # omitting vlan on OVS Bridge results in only VLAN 0 (native) passing
   config: |-
     {
       "cniVersion": "0.4.0",
       "name": "trunk",
-      "type": "cnv-bridge",
-      "macspoof": false,
+      "type": "bridge",
+      "macspoofchk": false,
       "bridge": "br-trunk",
       "netAttachDefName": "demo-vgt/trunk",
-      "vlanId": {},
       "ipam": {}
     }
 ```
 {{< /collapsable >}}
 
-⭐ **Important Update 2025-08** _Changes for OpenShift 4.19_
-
-_As of OpenShift 4.19 IP forwarding is disabled on each NIC by default.
-You must enable IP forwarding for the NIC tied to the Linux bridge._
+> ⭐ **Important Update 2025-08** _Changes for OpenShift 4.19_
+>
+> _As of OpenShift 4.19 IP forwarding is disabled on each NIC by default.
+> You must enable IP forwarding for the NIC tied to the Linux bridge._
 
 >  📓 **`Tuned` profile to enable IP forwarding on physical NIC**
 >  [ref](https://github.com/dlbewley/demo-virt/blob/main/demos/vgt/components/br-trunk/linux-bridge/tuned.yaml)
@@ -242,6 +244,8 @@ More on UDN in a future post.
 * [Linux Bridge][8]
 * [GUI Free Life OVN Inspection][9] post
 * [OpenStack VLAN Aware Instances][10]
+* [Bridge CNI Docs][14]
+* [Bridge CNI Source Code][15]
 
 [2]: <https://github.com/containernetworking/cni/blob/spec-v0.4.0/SPEC.md> "CNI v0.4.0 Specification"
 [3]: <https://github.com/ovn-org/ovn-kubernetes> "OVN-Kubernetes CNI Plugin"
@@ -254,3 +258,5 @@ More on UDN in a future post.
 [11]: <https://en.wikipedia.org/wiki/Data_link_layer>
 [12]: <https://en.wikipedia.org/wiki/Ethernet>
 [13]: <https://docs.openshift.com/container-platform/4.17/networking/hardware_networks/configuring-sriov-qinq-support.html> "QinQ"
+[14]: <https://www.cni.dev/plugins/current/main/bridge/> "Bridge CNI Docs"
+[15]: <https://github.com/containernetworking/plugins/blob/main/plugins/main/bridge/bridge.go> "Bridge CNI Source Code"
