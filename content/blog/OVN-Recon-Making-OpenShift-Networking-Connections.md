@@ -57,7 +57,7 @@ Cluster user defined networks may also be announced to [BGP][route-ad] peers via
   attr="OVN Recon Screenshot"
 >}}
 
-All these graphed resources are joined by interactive connections. When you click a bridge-mapping all the upstream and downstream elements are highlighted. Clicking a resource reveals details, relationship summaries, and a liink directly to the resource in the OpenShift Console.
+All these graphed resources are joined by interactive connections. When you click a bridge-mapping all the upstream and downstream elements are highlighted. Clicking a resource reveals details, relationship summaries, and a link directly to the resource in the OpenShift Console.
 
 # Installing the OVN Recon Operator
 
