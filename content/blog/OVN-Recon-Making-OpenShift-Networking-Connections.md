@@ -23,7 +23,7 @@ The OpenShift networking stack, including the [OVN-Kubernetes][ovn-k] CNI, [Clus
 
 **Networking is opaque and confusing.** 😵‍💫
 
-Networking Configuration is multilayered. Begining with the physical network interfaces cards which may be bound together into a logical bond, or they may also be sliced into VLAN subinterfaces. Those subinterfaces or their parents may be attached to OVS bridges or maybe Linux bridges.
+Networking Configuration is multilayered. Beginning with the physical network interfaces cards which may be bound together into a logical bond, or they may also be sliced into VLAN subinterfaces. Those subinterfaces or their parents may be attached to OVS bridges or maybe Linux bridges.
 
 These bridges may be aliased through a bridge-mapping that can be referenced to attach directly to local networks or VLANs arriving over trunks. Users can even define their own networks which replace the pod network for their namespace. These networks may be advertised over BGP through VRFs. Soon a broadcast domain may span multiple clusters with EVPN. There are just a lot of solutions for problems you may not even have.
 
@@ -36,12 +36,12 @@ If you are new to OpenShift, you may have a pre-existing mental model from anoth
 > 💡 **OVN Recon helps you answer questions like:**
 >
 > - Which physical interface does this network traverse?
-> - What networks are attached to thsi bridge?
+> - What networks are attached to this bridge?
 > - Which namespaces have access to this network?
 > - Where are UDNs being used?
 > - What VRFs are advertising what subnets over BGP?
 
-OVN Recon provides a view of the overall network configuration from the perspective of a single node. Begining with the data already gathered by [NMstate][nmstate] in the [`NodeNetworkState`][nmstate-nns] resource, it maps out the physical interfaces and arranges them in columns.
+OVN Recon provides a view of the overall network configuration from the perspective of a single node. Beginning with the data already gathered by [NMstate][nmstate] in the [`NodeNetworkState`][nmstate-nns] resource, it maps out the physical interfaces and arranges them in columns.
 
 Bridges and bridge mappings are added to show how they make the logical connection from network to physical interface.
 
@@ -57,7 +57,7 @@ Cluster user defined networks may also be announced to [BGP][route-ad] peers via
   attr="OVN Recon Screenshot"
 >}}
 
-All these graphed resources are joined by interactive connections. When you click a bridge-mapping all the upstream and downstream elements are highlighted. Clicking a resource reveals details, relationship summaries, and a liink directly to the resource in the OpenShift Console.
+All these graphed resources are joined by interactive connections. When you click a bridge-mapping all the upstream and downstream elements are highlighted. Clicking a resource reveals details, relationship summaries, and a link directly to the resource in the OpenShift Console.
 
 # Installing the OVN Recon Operator
 
