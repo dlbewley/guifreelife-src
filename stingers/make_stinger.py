@@ -334,6 +334,7 @@ class Config:
     keywords: List[str]  = field(default_factory=list)
     images:   List[str]  = field(default_factory=list)
     duration: str        = "both"
+    stem:     str        = "stinger"   # output filename base: {stem}_5s.mp4
     output:   Path       = HERE
     seed:     Optional[int] = None
     audio:    AudioConfig = field(default_factory=AudioConfig)
@@ -344,7 +345,7 @@ class Config:
 
     @property
     def work(self) -> Path:
-        return self.output / "_work"
+        return self.output / f"_work_{self.stem}"
 
 # ─── Fonts ────────────────────────────────────────────────────────────────────
 
@@ -777,7 +778,7 @@ def make_audio(dur: float, acfg: AudioConfig, out_path: Path):
 # ─── Concat + mux ─────────────────────────────────────────────────────────────
 
 def concat_and_mux(segments, audio_path, out_path):
-    w   = out_path.parent / "_work"
+    w   = audio_path.parent          # audio_path is already inside the stem work dir
     cf  = w / "concat_list.txt"
     tmp = w / "concat_raw.mp4"
     cf.write_text("\n".join(f"file '{Path(s).resolve()}'" for s in segments) + "\n")
@@ -829,7 +830,7 @@ def build_5s(cfg: Config):
     segs.append(str(p))
 
     ap  = w / "audio_5s.wav";     make_audio(5.35, cfg.audio, ap)
-    out = cfg.output / "stinger_5s.mp4"
+    out = cfg.output / f"{cfg.stem}_5s.mp4"
     concat_and_mux(segs, ap, out)
     print(f"  ✓  {out}")
 
@@ -853,7 +854,7 @@ def build_1s(cfg: Config):
     segs.append(str(p))
 
     ap  = w / "audio_1s.wav";   make_audio(1.0, cfg.audio, ap)
-    out = cfg.output / "stinger_1s.mp4"
+    out = cfg.output / f"{cfg.stem}_1s.mp4"
     concat_and_mux(segs, ap, out)
     print(f"  ✓  {out}")
 
@@ -899,6 +900,8 @@ def parse_args() -> Config:
     g_out = p.add_argument_group("output")
     g_out.add_argument("--duration", "-d", choices=["1s","5s","both"], default="both",
         help="Which stinger(s) to generate. (default: both)")
+    g_out.add_argument("--stem", default="stinger", metavar="NAME",
+        help="Output filename base: {stem}_5s.mp4 / {stem}_1s.mp4. (default: stinger)")
     g_out.add_argument("--output", "-o", default=str(HERE), metavar="DIR",
         help=f"Output directory. (default: {HERE})")
     g_out.add_argument("--seed", type=int, default=None, metavar="N",
@@ -931,6 +934,7 @@ def parse_args() -> Config:
         keywords = keywords,
         images   = images,
         duration = args.duration,
+        stem     = args.stem,
         output   = Path(args.output),
         seed     = args.seed,
         audio    = audio_cfg,
@@ -973,9 +977,9 @@ def main():
 
     print("\n  Done.")
     if cfg.duration in ("5s", "both"):
-        print(f"  → {cfg.output / 'stinger_5s.mp4'}  (5-second promo)")
+        print(f"  → {cfg.output / f'{cfg.stem}_5s.mp4'}  (5-second promo)")
     if cfg.duration in ("1s", "both"):
-        print(f"  → {cfg.output / 'stinger_1s.mp4'}  (1-second bumper)")
+        print(f"  → {cfg.output / f'{cfg.stem}_1s.mp4'}  (1-second bumper)")
 
 
 if __name__ == "__main__":
