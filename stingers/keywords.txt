@@ -1,0 +1,19 @@
+# GUI Free Life — keyword flash list
+# One keyword per line. Lines starting with # are comments.
+# These flash on screen during the stinger.
+
+OVN
+Kubernetes
+Networking
+Virtualization
+CoreOS
+Automation
+Security
+Ansible
+RHACM
+Operators
+etcd
+Prometheus
+OpenShift
+Hybrid Cloud
+kubeconfig
