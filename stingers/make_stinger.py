@@ -66,6 +66,13 @@ ROOT = HERE.parent              # repo root
 
 W, H, FPS = 1920, 1080, 30
 
+RESOLUTIONS = {"hd": (1920, 1080), "4k": (3840, 2160)}
+
+
+def fs(n: int) -> int:
+    """Scale a 1080p pixel/font value to the current output resolution."""
+    return max(1, int(n * H / 1080))
+
 # ─── Default config file paths ───────────────────────────────────────────────
 DEFAULT_KEYWORDS_FILE = HERE / "keywords.txt"
 DEFAULT_IMAGES_FILE   = HERE / "images.txt"
@@ -333,11 +340,16 @@ class Config:
     tagline:  str        = ""
     keywords: List[str]  = field(default_factory=list)
     images:   List[str]  = field(default_factory=list)
-    duration: str        = "both"
-    stem:     str        = "stinger"   # output filename base: {stem}_5s.mp4
-    output:   Path       = HERE
-    seed:     Optional[int] = None
-    audio:    AudioConfig = field(default_factory=AudioConfig)
+    duration:   str        = "both"
+    stem:       str        = "stinger"   # output filename base: {stem}_5s.mp4
+    output:     Path       = HERE
+    seed:       Optional[int] = None
+    audio:      AudioConfig = field(default_factory=AudioConfig)
+    resolution: str        = "hd"       # hd | 4k
+
+    @property
+    def res_suffix(self) -> str:
+        return "" if self.resolution == "hd" else f"_{self.resolution}"
 
     def __post_init__(self):
         if not self.tagline and self.keywords:
@@ -530,6 +542,23 @@ def text_size(draw, text, font):
     bb = draw.textbbox((0, 0), text, font=font)
     return bb[2] - bb[0], bb[3] - bb[1]
 
+
+def wrap_text(draw, text: str, font, max_width: int) -> List[str]:
+    """Split text into lines that each fit within max_width pixels."""
+    words = text.split()
+    lines, current = [], ""
+    for word in words:
+        candidate = f"{current} {word}".strip()
+        if text_size(draw, candidate, font)[0] <= max_width:
+            current = candidate
+        else:
+            if current:
+                lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    return lines or [text]
+
 def glow_text(img, draw, x, y, text, font,
               fill_color, glow_color, glow_radius=12, glow_alpha=180):
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -545,8 +574,8 @@ def glow_text(img, draw, x, y, text, font,
 def render_keyword_overlay(keywords: List[str], out_path: Path):
     img  = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    font = make_font(FONT_MONO_PATH, 46)
-    m    = 55
+    font = make_font(FONT_MONO_PATH, fs(46))
+    m    = fs(55)
     corners = [("left","top"), ("right","top"), ("left","bottom"), ("right","bottom")]
     for i, kw in enumerate(keywords[:4]):
         label = f"[ {kw.upper()} ]"
@@ -556,52 +585,65 @@ def render_keyword_overlay(keywords: List[str], out_path: Path):
         y = m if sy == "top"  else H - th - m
         glow_text(img, draw, x, y, label, font,
                   fill_color=rgba(CYAN, 220), glow_color=MAGENTA,
-                  glow_radius=10, glow_alpha=130)
+                  glow_radius=fs(10), glow_alpha=130)
     img.save(str(out_path), "PNG")
 
 
 def render_title_overlay(cfg: Config, tag_line: str, out_path: Path):
     img  = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    fb   = make_font(FONT_DISPLAY_PATH, 180)
-    tw, th = text_size(draw, cfg.title, fb)
-    tx, ty = (W - tw) // 2, (H - th) // 2 - 40
-    pad = 18
+    fb   = make_font(FONT_DISPLAY_PATH, fs(180))
+
+    lines   = wrap_text(draw, cfg.title, fb, W - fs(80))
+    line_h  = text_size(draw, "Ag", fb)[1]
+    gap     = fs(12)
+    total_h = line_h * len(lines) + gap * (len(lines) - 1)
+    max_lw  = max(text_size(draw, l, fb)[0] for l in lines)
+    ty      = (H - total_h) // 2 - fs(40)
+
+    pad = fs(18)
     box = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     ImageDraw.Draw(box).rectangle(
-        [tx-pad, ty-pad, tx+tw+pad, ty+th+pad], fill=(0, 0, 0, 140))
+        [(W - max_lw) // 2 - pad, ty - pad,
+         (W + max_lw) // 2 + pad, ty + total_h + pad], fill=(0, 0, 0, 140))
     img.alpha_composite(box)
     draw = ImageDraw.Draw(img)
-    draw.text((tx + 8, ty), cfg.title, font=fb, fill=rgba(MAGENTA, 160))
-    glow_text(img, draw, tx, ty, cfg.title, fb,
-              fill_color=rgba(CYAN, 255), glow_color=CYAN,
-              glow_radius=16, glow_alpha=120)
-    draw = ImageDraw.Draw(img)
-    fs = make_font(FONT_MONO_PATH, 60)
-    sw, _ = text_size(draw, cfg.subtitle, fs)
-    glow_text(img, draw, (W-sw)//2, ty+th+30, cfg.subtitle, fs,
+
+    for i, line in enumerate(lines):
+        lw, _ = text_size(draw, line, fb)
+        lx = (W - lw) // 2
+        ly = ty + i * (line_h + gap)
+        draw.text((lx + fs(8), ly), line, font=fb, fill=rgba(MAGENTA, 160))
+        glow_text(img, draw, lx, ly, line, fb,
+                  fill_color=rgba(CYAN, 255), glow_color=CYAN,
+                  glow_radius=fs(16), glow_alpha=120)
+        draw = ImageDraw.Draw(img)
+
+    font_sub = make_font(FONT_MONO_PATH, fs(60))
+    sw, _ = text_size(draw, cfg.subtitle, font_sub)
+    glow_text(img, draw, (W-sw)//2, ty + total_h + fs(30), cfg.subtitle, font_sub,
               fill_color=rgba(GREEN, 230), glow_color=GREEN,
-              glow_radius=8, glow_alpha=90)
+              glow_radius=fs(8), glow_alpha=90)
     draw = ImageDraw.Draw(img)
-    ft = make_font(FONT_MONO_PATH, 36)
+    ft = make_font(FONT_MONO_PATH, fs(36))
     tgw, tgh = text_size(draw, tag_line, ft)
-    draw.text(((W-tgw)//2, H-tgh-55), tag_line, font=ft, fill=rgba(WHITE, 80))
+    draw.text(((W-tgw)//2, H-tgh-fs(55)), tag_line, font=ft, fill=rgba(WHITE, 80))
     img.save(str(out_path), "PNG")
 
 
 def render_noise_overlay(cfg: Config, keywords: List[str], out_path: Path):
     img  = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    font = make_font(FONT_MONO_PATH, 70)
+    font = make_font(FONT_MONO_PATH, fs(70))
     n    = min(len(keywords), 5)
     step = H // (n + 1)
     for i, kw in enumerate(keywords[:n]):
-        y = step * (i + 1) - 35
-        glow_text(img, draw, 60, y, f"$ {kw.upper()}_", font,
+        y = step * (i + 1) - fs(35)
+        glow_text(img, draw, fs(60), y, f"$ {kw.upper()}_", font,
                   fill_color=rgba(GREEN, 230), glow_color=GREEN,
-                  glow_radius=8, glow_alpha=100)
+                  glow_radius=fs(8), glow_alpha=100)
         draw = ImageDraw.Draw(img)
-    fg = make_font(FONT_DISPLAY_PATH, 120)
+    fg = make_font(FONT_DISPLAY_PATH, fs(120))
     gw, gh = text_size(draw, cfg.title, fg)
     draw.text(((W-gw)//2, (H-gh)//2), cfg.title, font=fg, fill=rgba(CYAN, 35))
     img.save(str(out_path), "PNG")
@@ -610,24 +652,40 @@ def render_noise_overlay(cfg: Config, keywords: List[str], out_path: Path):
 def render_glitch_title_overlay(cfg: Config, out_path: Path):
     img  = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    fb   = make_font(FONT_DISPLAY_PATH, 180)
-    tw, th = text_size(draw, cfg.title, fb)
-    tx, ty = (W-tw)//2, (H-th)//2 - 40
+    fb   = make_font(FONT_DISPLAY_PATH, fs(180))
+
+    lines   = wrap_text(draw, cfg.title, fb, W - fs(80))
+    line_h  = text_size(draw, "Ag", fb)[1]
+    gap     = fs(12)
+    total_h = line_h * len(lines) + gap * (len(lines) - 1)
+    ty      = (H - total_h) // 2 - fs(40)
+
     glow = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    ImageDraw.Draw(glow).text((tx, ty), cfg.title, font=fb, fill=rgba(CYAN, 100))
-    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(radius=24)))
+    gd   = ImageDraw.Draw(glow)
+    for i, line in enumerate(lines):
+        lw, _ = text_size(draw, line, fb)
+        lx = (W - lw) // 2
+        ly = ty + i * (line_h + gap)
+        gd.text((lx, ly), line, font=fb, fill=rgba(CYAN, 100))
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(radius=fs(24))))
+
     draw = ImageDraw.Draw(img)
-    draw.text((tx+14, ty), cfg.title, font=fb, fill=rgba(MAGENTA, 200))
-    draw.text((tx,    ty), cfg.title, font=fb, fill=rgba(CYAN, 255))
-    fs = make_font(FONT_MONO_PATH, 60)
-    sw, _ = text_size(draw, cfg.subtitle, fs)
-    glow_text(img, draw, (W-sw)//2, ty+th+28, cfg.subtitle, fs,
+    for i, line in enumerate(lines):
+        lw, _ = text_size(draw, line, fb)
+        lx = (W - lw) // 2
+        ly = ty + i * (line_h + gap)
+        draw.text((lx + fs(14), ly), line, font=fb, fill=rgba(MAGENTA, 200))
+        draw.text((lx,          ly), line, font=fb, fill=rgba(CYAN, 255))
+
+    font_sub = make_font(FONT_MONO_PATH, fs(60))
+    sw, _ = text_size(draw, cfg.subtitle, font_sub)
+    glow_text(img, draw, (W-sw)//2, ty + total_h + fs(28), cfg.subtitle, font_sub,
               fill_color=rgba(GREEN, 235), glow_color=GREEN,
-              glow_radius=8, glow_alpha=90)
+              glow_radius=fs(8), glow_alpha=90)
     draw = ImageDraw.Draw(img)
-    ft = make_font(FONT_MONO_PATH, 36)
+    ft = make_font(FONT_MONO_PATH, fs(36))
     tgw, _ = text_size(draw, cfg.tagline, ft)
-    draw.text(((W-tgw)//2, H-65), cfg.tagline, font=ft, fill=rgba(WHITE, 75))
+    draw.text(((W-tgw)//2, H-fs(65)), cfg.tagline, font=ft, fill=rgba(WHITE, 75))
     img.save(str(out_path), "PNG")
 
 # ─── FFmpeg helpers ───────────────────────────────────────────────────────────
@@ -647,9 +705,17 @@ def chroma_geq(s=6):
             f"g='g(X,Y)':"
             f"b='b(X-{s}*cos(T*13),Y-2*sin(T*11))'")
 
-SCANLINES    = ("geq=lum='lum(X,Y)*(0.55+0.45*cos(Y*PI/1.5))':cb='cb(X,Y)':cr='cr(X,Y)'")
-GLITCH_STRIPE= ("geq=lum='lum(X,Y)+if(between(Y,floor(500+300*sin(T*29)),"
-                "floor(516+300*sin(T*29))),random(1)*90,0)':cb='cb(X,Y)':cr='cr(X,Y)'")
+def _scanlines() -> str:
+    period = round(H / 720, 1)   # ~1.5 px at 1080p, ~3.0 px at 4K
+    return f"geq=lum='lum(X,Y)*(0.55+0.45*cos(Y*PI/{period}))':cb='cb(X,Y)':cr='cr(X,Y)'"
+
+
+def _glitch_stripe() -> str:
+    base = round(H * 500 / 1080)
+    amp  = round(H * 300 / 1080)
+    end  = round(H * 516 / 1080)
+    return (f"geq=lum='lum(X,Y)+if(between(Y,floor({base}+{amp}*sin(T*29)),"
+            f"floor({end}+{amp}*sin(T*29))),random(1)*90,0)':cb='cb(X,Y)':cr='cr(X,Y)'")
 
 def base_glitch_chain(noise=18, chroma=5):
     return ",".join([
@@ -657,7 +723,7 @@ def base_glitch_chain(noise=18, chroma=5):
         "eq=contrast=1.5:brightness=-0.07:saturation=2.0",
         "colorchannelmixer=rr=0.65:gg=0.92:bb=1.18",
         f"noise=alls={noise}:allf=t",
-        chroma_geq(chroma), SCANLINES, "vignette=PI/3.2",
+        chroma_geq(chroma), _scanlines(), "vignette=PI/3.2",
     ])
 
 # ─── Segment generators ───────────────────────────────────────────────────────
@@ -678,7 +744,7 @@ def seg_from_color(bg_color, overlay_png, dur, out, noise=60, chroma=8):
         f"noise=alls={noise}:allf=t",
         *( ["colorchannelmixer=rr=0.04:gg=0.28:bb=0.22",
             "eq=contrast=2.2:brightness=0.05"] if noise_scene else [] ),
-        chroma_geq(chroma), SCANLINES, GLITCH_STRIPE, "vignette=PI/2.8",
+        chroma_geq(chroma), _scanlines(), _glitch_stripe(), "vignette=PI/2.8",
     ]
     run([
         "-f","lavfi","-i",f"color={bg_color}:s={W}x{H}:r={FPS}",
@@ -694,8 +760,8 @@ def seg_blackout(dur, out):
     run([
         "-f","lavfi","-i",f"color=black:s={W}x{H}:r={FPS}",
         "-filter_complex",
-        "[0:v]noise=alls=12:allf=t,"
-        "geq=r='r(X+20*sin(T*80),Y)':g='g(X,Y)':b='b(X-20*cos(T*70),Y)'[out]",
+        f"[0:v]noise=alls=12:allf=t,"
+        f"geq=r='r(X+{fs(20)}*sin(T*80),Y)':g='g(X,Y)':b='b(X-{fs(20)}*cos(T*70),Y)'[out]",
         "-map","[out]", "-t",str(dur),"-r",str(FPS),
         "-c:v","libx264","-pix_fmt","yuv420p", str(out),
     ], "blackout → " + out.name)
@@ -830,7 +896,7 @@ def build_5s(cfg: Config):
     segs.append(str(p))
 
     ap  = w / "audio_5s.wav";     make_audio(5.35, cfg.audio, ap)
-    out = cfg.output / f"{cfg.stem}_5s.mp4"
+    out = cfg.output / f"{cfg.stem}_5s{cfg.res_suffix}.mp4"
     concat_and_mux(segs, ap, out)
     print(f"  ✓  {out}")
 
@@ -854,7 +920,7 @@ def build_1s(cfg: Config):
     segs.append(str(p))
 
     ap  = w / "audio_1s.wav";   make_audio(1.0, cfg.audio, ap)
-    out = cfg.output / f"{cfg.stem}_1s.mp4"
+    out = cfg.output / f"{cfg.stem}_1s{cfg.res_suffix}.mp4"
     concat_and_mux(segs, ap, out)
     print(f"  ✓  {out}")
 
@@ -904,6 +970,9 @@ def parse_args() -> Config:
         help="Output filename base: {stem}_5s.mp4 / {stem}_1s.mp4. (default: stinger)")
     g_out.add_argument("--output", "-o", default=str(HERE), metavar="DIR",
         help=f"Output directory. (default: {HERE})")
+    g_out.add_argument("--resolution", "-r", choices=list(RESOLUTIONS), default="hd",
+        metavar="RES",
+        help="Output resolution: hd (1920×1080) or 4k (3840×2160). (default: hd)")
     g_out.add_argument("--seed", type=int, default=None, metavar="N",
         help="Random seed for reproducible image shuffle.")
 
@@ -928,16 +997,17 @@ def parse_args() -> Config:
         audio_cfg.layers = [l.strip() for l in args.layers.split(",") if l.strip()]
 
     return Config(
-        title    = args.title,
-        subtitle = args.subtitle,
-        tagline  = args.tagline,
-        keywords = keywords,
-        images   = images,
-        duration = args.duration,
-        stem     = args.stem,
-        output   = Path(args.output),
-        seed     = args.seed,
-        audio    = audio_cfg,
+        title      = args.title,
+        subtitle   = args.subtitle,
+        tagline    = args.tagline,
+        keywords   = keywords,
+        images     = images,
+        duration   = args.duration,
+        stem       = args.stem,
+        output     = Path(args.output),
+        seed       = args.seed,
+        audio      = audio_cfg,
+        resolution = args.resolution,
     )
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
@@ -945,6 +1015,10 @@ def parse_args() -> Config:
 def main():
     cfg = parse_args()
     ac  = cfg.audio
+
+    # Apply resolution — must happen before any render/ffmpeg calls
+    global W, H
+    W, H = RESOLUTIONS[cfg.resolution]
 
     print("═" * 52)
     print(f"  {cfg.title} — Stinger Generator")
@@ -962,6 +1036,7 @@ def main():
     print(f"  keywords   : {len(cfg.keywords)}  ({', '.join(cfg.keywords[:5])}…)")
     print(f"  images     : {len(cfg.images)}")
     print(f"  duration   : {cfg.duration}")
+    print(f"  resolution : {cfg.resolution}  ({W}×{H})")
     print(f"  output     : {cfg.output}")
     print(f"  audio      : style={ac.style}  bpm={ac.bpm}  "
           f"layers=[{', '.join(ac.layers)}]")
@@ -977,9 +1052,9 @@ def main():
 
     print("\n  Done.")
     if cfg.duration in ("5s", "both"):
-        print(f"  → {cfg.output / f'{cfg.stem}_5s.mp4'}  (5-second promo)")
+        print(f"  → {cfg.output / f'{cfg.stem}_5s{cfg.res_suffix}.mp4'}  (5-second promo)")
     if cfg.duration in ("1s", "both"):
-        print(f"  → {cfg.output / f'{cfg.stem}_1s.mp4'}  (1-second bumper)")
+        print(f"  → {cfg.output / f'{cfg.stem}_1s{cfg.res_suffix}.mp4'}  (1-second bumper)")
 
 
 if __name__ == "__main__":

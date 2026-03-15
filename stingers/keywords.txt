@@ -4,16 +4,15 @@
 
 OVN
 Kubernetes
+Linux
 Networking
 Virtualization
 CoreOS
 Automation
 Security
-Ansible
-RHACM
 Operators
-etcd
 Prometheus
 OpenShift
 Hybrid Cloud
-kubeconfig
+GitOps
+AI
