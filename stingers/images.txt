@@ -13,9 +13,9 @@ static/images/layering-cake-trans.png
 static/images/keda-dashboard-metrics.png
 static/img/banners/banner-7.jpg
 static/img/banners/banner-18.jpg
-static/img/banners/banner-30.jpg
 static/img/banners/banner-42.jpg
 static/img/banners/banner-3.jpg
+static/img/banners/mushroom-moss.jpg
 static/images/blog-external-secrets.png
 static/images/cat-loves-nncp.png
 static/images/cnv-nncp-1.png

@@ -346,10 +346,25 @@ class Config:
     seed:       Optional[int] = None
     audio:      AudioConfig = field(default_factory=AudioConfig)
     resolution: str        = "hd"       # hd | 4k
+    intensity:  str        = "normal"   # normal | extreme
 
     @property
     def res_suffix(self) -> str:
         return "" if self.resolution == "hd" else f"_{self.resolution}"
+
+    @property
+    def img_fx(self) -> tuple:
+        """Extra filters applied to image segments in extreme mode."""
+        if self.intensity == "extreme":
+            return (scan_jitter(row_h=fs(4), shift=fs(60)), rgb_bleed(amp=fs(12)))
+        return ()
+
+    @property
+    def col_fx(self) -> tuple:
+        """Extra filters applied to colour segments in extreme mode."""
+        if self.intensity == "extreme":
+            return (_extra_glitch_stripe(),)
+        return ()
 
     def __post_init__(self):
         if not self.tagline and self.keywords:
@@ -717,19 +732,51 @@ def _glitch_stripe() -> str:
     return (f"geq=lum='lum(X,Y)+if(between(Y,floor({base}+{amp}*sin(T*29)),"
             f"floor({end}+{amp}*sin(T*29))),random(1)*90,0)':cb='cb(X,Y)':cr='cr(X,Y)'")
 
-def base_glitch_chain(noise=18, chroma=5):
+
+def _extra_glitch_stripe() -> str:
+    """Second animated corruption band at a different Y position and speed."""
+    base = round(H * 0.25)
+    amp  = round(H * 0.14)
+    end  = base + round(H * 0.012)
+    return (f"geq=lum='lum(X,Y)+if(between(Y,floor({base}+{amp}*sin(T*41+1.7)),"
+            f"floor({end}+{amp}*sin(T*41+1.7))),random(2)*115,0)':cb='cb(X,Y)':cr='cr(X,Y)'")
+
+
+def scan_jitter(row_h: int = 4, shift: int = 60, speed: int = 18, prob: float = 0.82) -> str:
+    """Randomly displace horizontal pixel bands left/right — hard digital corruption."""
+    row  = f"floor(Y/{row_h})"
+    time = f"floor(T*{speed})"
+    seed_amt  = f"({row}*1000+{time})"
+    seed_gate = f"({row}*1000+{time}+7)"
+    dr = f"{shift}*(random({seed_amt})-0.5)*gt(random({seed_gate}),{prob})"
+    db = f"{shift//2}*(random({seed_amt}+3)-0.5)*gt(random({seed_gate}+3),{prob+0.04:.2f})"
+    return (f"geq="
+            f"r='r(clip(X+{dr},0,W-1),Y)':"
+            f"g='g(X,Y)':"
+            f"b='b(clip(X-{db},0,W-1),Y)'")
+
+
+def rgb_bleed(amp: int = 12, speed: int = 7) -> str:
+    """Animated per-channel displacement — chromatic aberration on steroids."""
+    return (f"geq="
+            f"r='r(X+{amp}*sin(T*{speed}),Y+{amp//3}*cos(T*{speed*0.6:.1f}))':"
+            f"g='g(X-{amp//4}*cos(T*{speed}+1.0),Y)':"
+            f"b='b(X-{amp}*cos(T*{speed}+2.1),Y-{amp//3}*sin(T*{speed*1.4:.1f}))'")
+
+def base_glitch_chain(noise=18, chroma=5, extra=()):
     return ",".join([
         f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H}",
         "eq=contrast=1.5:brightness=-0.07:saturation=2.0",
         "colorchannelmixer=rr=0.65:gg=0.92:bb=1.18",
         f"noise=alls={noise}:allf=t",
         chroma_geq(chroma), _scanlines(), "vignette=PI/3.2",
+        *extra,
     ])
 
 # ─── Segment generators ───────────────────────────────────────────────────────
 
-def seg_from_image(img_path, overlay_png, dur, out, noise=18, chroma=5):
-    glitch = base_glitch_chain(noise=noise, chroma=chroma)
+def seg_from_image(img_path, overlay_png, dur, out, noise=18, chroma=5, extra=()):
+    glitch = base_glitch_chain(noise=noise, chroma=chroma, extra=extra)
     run([
         "-loop","1","-i", img_path, "-loop","1","-i", str(overlay_png),
         "-filter_complex", f"[0:v]{glitch}[v];[v][1:v]overlay=0:0[out]",
@@ -738,13 +785,14 @@ def seg_from_image(img_path, overlay_png, dur, out, noise=18, chroma=5):
     ], f"img({Path(img_path).name}) → {out.name}")
 
 
-def seg_from_color(bg_color, overlay_png, dur, out, noise=60, chroma=8):
+def seg_from_color(bg_color, overlay_png, dur, out, noise=60, chroma=8, extra=()):
     noise_scene = "0a1a14" in bg_color
     filters = [
         f"noise=alls={noise}:allf=t",
         *( ["colorchannelmixer=rr=0.04:gg=0.28:bb=0.22",
             "eq=contrast=2.2:brightness=0.05"] if noise_scene else [] ),
         chroma_geq(chroma), _scanlines(), _glitch_stripe(), "vignette=PI/2.8",
+        *extra,
     ]
     run([
         "-f","lavfi","-i",f"color={bg_color}:s={W}x{H}:r={FPS}",
@@ -865,31 +913,32 @@ def _pick(images: List[str], n: int) -> List[str]:
 def build_5s(cfg: Config):
     print("\n▶  5-second stinger")
     kw, imgs, w = cfg.keywords, _pick(cfg.images, 6), cfg.work
+    ifx, cfx = cfg.img_fx, cfg.col_fx
     segs = []
 
     ov = w / "ov_noise.png";      render_noise_overlay(cfg, kw[:5], ov)
-    p  = w / "5s_00_noise.mp4";   seg_from_color("0x0a1a14", ov, 0.45, p, noise=95, chroma=9)
+    p  = w / "5s_00_noise.mp4";   seg_from_color("0x0a1a14", ov, 0.45, p, noise=95, chroma=9, extra=cfx)
     segs.append(str(p))
 
     ov = w / "ov_kw1.png";        render_keyword_overlay(kw[0:4], ov)
-    p  = w / "5s_01.mp4";         seg_from_image(imgs[0], ov, 0.7, p, noise=22, chroma=7)
+    p  = w / "5s_01.mp4";         seg_from_image(imgs[0], ov, 0.7, p, noise=22, chroma=7, extra=ifx)
     segs.append(str(p))
 
     ov = w / "ov_kw2.png";        render_keyword_overlay(kw[4:8], ov)
-    p  = w / "5s_02.mp4";         seg_from_image(imgs[1], ov, 0.65, p, noise=16, chroma=4)
+    p  = w / "5s_02.mp4";         seg_from_image(imgs[1], ov, 0.65, p, noise=16, chroma=4, extra=ifx)
     segs.append(str(p))
 
     ov = w / "ov_title_img.png"
     render_title_overlay(cfg, "  •  ".join(k.lower() for k in kw[8:11]), ov)
-    p  = w / "5s_03.mp4";         seg_from_image(imgs[2], ov, 0.8, p, noise=20, chroma=9)
+    p  = w / "5s_03.mp4";         seg_from_image(imgs[2], ov, 0.8, p, noise=20, chroma=9, extra=ifx)
     segs.append(str(p))
 
     ov = w / "ov_kw3.png";        render_keyword_overlay((kw[11:15] or kw[-4:]), ov)
-    p  = w / "5s_04.mp4";         seg_from_image(imgs[3], ov, 0.6, p, noise=25, chroma=6)
+    p  = w / "5s_04.mp4";         seg_from_image(imgs[3], ov, 0.6, p, noise=25, chroma=6, extra=ifx)
     segs.append(str(p))
 
     ov = w / "ov_title_card.png"; render_glitch_title_overlay(cfg, ov)
-    p  = w / "5s_05_title.mp4";   seg_from_color("0x06060e", ov, 1.8, p, noise=14, chroma=10)
+    p  = w / "5s_05_title.mp4";   seg_from_color("0x06060e", ov, 1.8, p, noise=14, chroma=10, extra=cfx)
     segs.append(str(p))
 
     p  = w / "5s_06_black.mp4";   seg_blackout(0.35, p)
@@ -904,19 +953,20 @@ def build_5s(cfg: Config):
 def build_1s(cfg: Config):
     print("\n▶  1-second stinger")
     kw, imgs, w = cfg.keywords, _pick(cfg.images, 1), cfg.work
+    ifx, cfx = cfg.img_fx, cfg.col_fx
     segs = []
 
     ov = w / "1s_ov_noise.png";  render_noise_overlay(cfg, kw[:2], ov)
-    p  = w / "1s_00_noise.mp4"; seg_from_color("0x0a1a14", ov, 0.1, p, noise=95, chroma=9)
+    p  = w / "1s_00_noise.mp4"; seg_from_color("0x0a1a14", ov, 0.1, p, noise=95, chroma=9, extra=cfx)
     segs.append(str(p))
 
     ov = w / "1s_ov_img.png"
     render_title_overlay(cfg, "  •  ".join(k.lower() for k in kw[:3]), ov)
-    p  = w / "1s_01.mp4";       seg_from_image(imgs[0], ov, 0.55, p, noise=28, chroma=12)
+    p  = w / "1s_01.mp4";       seg_from_image(imgs[0], ov, 0.55, p, noise=28, chroma=12, extra=ifx)
     segs.append(str(p))
 
     ov = w / "1s_ov_title.png"; render_glitch_title_overlay(cfg, ov)
-    p  = w / "1s_02_title.mp4"; seg_from_color("0x06060e", ov, 0.35, p, noise=14, chroma=15)
+    p  = w / "1s_02_title.mp4"; seg_from_color("0x06060e", ov, 0.35, p, noise=14, chroma=15, extra=cfx)
     segs.append(str(p))
 
     ap  = w / "audio_1s.wav";   make_audio(1.0, cfg.audio, ap)
@@ -973,6 +1023,10 @@ def parse_args() -> Config:
     g_out.add_argument("--resolution", "-r", choices=list(RESOLUTIONS), default="hd",
         metavar="RES",
         help="Output resolution: hd (1920×1080) or 4k (3840×2160). (default: hd)")
+    g_out.add_argument("--intensity", "-x", choices=["normal", "extreme"], default="normal",
+        metavar="LEVEL",
+        help="Visual effect intensity: normal or extreme (adds scan jitter, rgb bleed, "
+             "extra glitch stripe). (default: normal)")
     g_out.add_argument("--seed", type=int, default=None, metavar="N",
         help="Random seed for reproducible image shuffle.")
 
@@ -1008,6 +1062,7 @@ def parse_args() -> Config:
         seed       = args.seed,
         audio      = audio_cfg,
         resolution = args.resolution,
+        intensity  = args.intensity,
     )
 
 # ─── Main ─────────────────────────────────────────────────────────────────────
@@ -1037,6 +1092,7 @@ def main():
     print(f"  images     : {len(cfg.images)}")
     print(f"  duration   : {cfg.duration}")
     print(f"  resolution : {cfg.resolution}  ({W}×{H})")
+    print(f"  intensity  : {cfg.intensity}")
     print(f"  output     : {cfg.output}")
     print(f"  audio      : style={ac.style}  bpm={ac.bpm}  "
           f"layers=[{', '.join(ac.layers)}]")
