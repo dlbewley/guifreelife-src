@@ -13,7 +13,7 @@ Glitchy electro-style promotional stingers for the **GUI Free Life** YouTube cha
 ## Regenerating
 
 ```bash
-python3 stingers/make_stinger.py
+python3 dev/stingers/make_stinger.py
 ```
 
 Requirements:

@@ -7,31 +7,31 @@ All inputs (channel name, keywords, source images, audio) are configurable via
 command-line flags or plain-text / TOML files.
 
 QUICK START
-    python3 stingers/make_stinger.py
+    python3 dev/stingers/make_stinger.py
 
-    Reads stingers/keywords.txt, stingers/images.txt, stingers/audio.toml;
+    Reads dev/stingers/keywords.txt, dev/stingers/images.txt, dev/stingers/audio.toml;
     all three are generated with defaults on first run.
 
 EXAMPLES
     # Defaults (reads all three config files):
-    python3 stingers/make_stinger.py
+    python3 dev/stingers/make_stinger.py
 
     # Override channel branding:
-    python3 stingers/make_stinger.py --title "MY CHANNEL" --subtitle "mychannel.com"
+    python3 dev/stingers/make_stinger.py --title "MY CHANNEL" --subtitle "mychannel.com"
 
     # Switch audio style preset:
-    python3 stingers/make_stinger.py --audio-style industrial
+    python3 dev/stingers/make_stinger.py --audio-style industrial
 
     # Inline keywords + fast BPM, 1-second bumper only:
-    python3 stingers/make_stinger.py \\
+    python3 dev/stingers/make_stinger.py \\
         --keywords "OVN,Kubernetes,Security,Ansible" \\
         --duration 1s --bpm 160
 
     # Custom image set (glob or comma-separated paths):
-    python3 stingers/make_stinger.py --images "static/images/*.png"
+    python3 dev/stingers/make_stinger.py --images "static/images/*.png"
 
     # Fine-grained audio control via TOML:
-    python3 stingers/make_stinger.py --audio my_audio.toml
+    python3 dev/stingers/make_stinger.py --audio dev/stingers/my_audio.toml
 
 AUDIO STYLE PRESETS
     electro       4/4 kick, arp, minor-pentatonic synth  (default)
@@ -61,8 +61,18 @@ from typing import List, Optional
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
-HERE = Path(__file__).parent    # stingers/
-ROOT = HERE.parent              # repo root
+HERE = Path(__file__).parent    # dev/stingers/
+
+
+def _find_repo_root(start: Path) -> Path:
+    """Walk up from start until we find a .git directory (repo root)."""
+    for p in [start, *start.parents]:
+        if (p / ".git").exists():
+            return p
+    return start.parent   # fallback: one level up
+
+
+ROOT = _find_repo_root(HERE)    # repo root
 
 W, H, FPS = 1920, 1080, 30
 

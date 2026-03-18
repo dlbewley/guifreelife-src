@@ -42,7 +42,7 @@ preview:
 	hugo server -D
 
 # Generate channel stingers and copy finals to static/videos/
-STINGER_DIR   = stingers
+STINGER_DIR   = dev/stingers
 STINGER_OUT   = static/videos
 STINGER_IMGS  = $(STINGER_DIR)/stinger-main-img.txt
 STINGER_KW    = $(STINGER_DIR)/keywords.txt
