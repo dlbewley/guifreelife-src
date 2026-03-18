@@ -1,0 +1,13 @@
+# golden gate
+/Users/dale/src/guifreelife-src/static/img/banners/banner-8.jpg
+# oakland theater
+/Users/dale/src/guifreelife-src/static/img/banners/banner-28.jpg
+# mushrooms
+#/Users/dale/src/guifreelife-src/static/img/banners/mushroom-moss.jpg
+# cat loves OVN
+/Users/dale/src/guifreelife-src/static/images/cat-loves-ovn.png
+# ai  •  kubernetes  •  linux  •  networking
+# ip output
+/Users/dale/src/guifreelife-src/static/images/cnv-nncp-1.png
+# circuitboard probe
+/Users/dale/src/guifreelife-src/static/images/debug-sts-banner.jpg
