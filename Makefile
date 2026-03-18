@@ -3,7 +3,7 @@ BANNER_DIR=static/img/banners
 all: banners thumbnails photogrid
 
 # adoc to docbook to markdown
-# Does not add ```syntax 
+# Does not add ```syntax
 # asciidoctor -b docbook -a leveloffset=+1 -o - README.adoc | pandoc  --atx-headers --wrap=preserve -t markdown_strict -f docbook - > README.md
 # adds `` {.bash} which does not quite work
 # asciidoctor -b docbook -a leveloffset=+1 -o - README.adoc | pandoc  --atx-headers --wrap=preserve -t markdown -f docbook - > README.md
@@ -40,3 +40,21 @@ realclean: clean
 
 preview:
 	hugo server -D
+
+# Generate channel stingers and copy finals to static/videos/
+STINGER_DIR   = dev/stingers
+STINGER_OUT   = static/videos
+STINGER_IMGS  = $(STINGER_DIR)/stinger-main-img.txt
+STINGER_KW    = $(STINGER_DIR)/keywords.txt
+
+.PHONY: stingers
+stingers:
+	mkdir -p $(STINGER_OUT)
+	python3 $(STINGER_DIR)/make_stinger.py \
+		--images  $(STINGER_IMGS) \
+		--keywords $(STINGER_KW) \
+		--duration both \
+		--stem stinger \
+		--output $(STINGER_DIR)/final
+	cp $(STINGER_DIR)/final/stinger_5s.mp4 $(STINGER_OUT)/intro-5s.mp4
+	cp $(STINGER_DIR)/final/stinger_1s.mp4 $(STINGER_OUT)/outro-1s.mp4

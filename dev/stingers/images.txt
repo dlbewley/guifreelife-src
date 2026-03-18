@@ -1,0 +1,30 @@
+# GUI Free Life — source image list
+# One path per line, relative to the repo root or absolute.
+# Lines starting with # are comments.
+# A random selection is used for each render.
+
+static/images/cat-loves-ovn.png
+static/images/debug-sts-banner.jpg
+static/images/ovn-recon.png
+static/images/machineconfigs-butane.png
+static/images/cnv-vm-1.png
+static/images/cnv-trunk-1.png
+static/images/layering-cake-trans.png
+static/images/keda-dashboard-metrics.png
+static/img/banners/banner-7.jpg
+static/img/banners/banner-18.jpg
+static/img/banners/banner-42.jpg
+static/img/banners/banner-3.jpg
+static/img/banners/mushroom-moss.jpg
+static/images/blog-external-secrets.png
+static/images/cat-loves-nncp.png
+static/images/cnv-nncp-1.png
+static/images/hammock-computer.jpg
+static/images/keychain-trust-cert.png
+static/images/openshift-ha-cluster-routing.png
+static/images/openshift-keda-autoscaling-sequence-2.png
+static/images/openshift-openstack-install-network-01.png
+static/images/openstack-network-pub.png
+static/images/port-of-oakland-night.png
+static/images/securing-cloud-init-1password-vault-2.png
+static/images/the-face-of-a-computer-operator-from-the-2134th-communications-squadron-is-2ca9c9.jpg
