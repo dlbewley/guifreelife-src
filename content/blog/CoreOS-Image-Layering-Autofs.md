@@ -10,10 +10,10 @@ tags:
   - openshift
   - kubernetes
   - operators
-description: CoreOS On-cluster Image Layering in OpenShift 4.19 allows modifications to node the operating system. This detailed walk through customizes the node operating system image by adding RPMs to support autofs.
+description: CoreOS On-cluster Image Layering in OpenShift allows modifications to node the operating system. This detailed walk through customizes the node operating system image by adding RPMs to support autofs.
 ---
 
-CoreOS On-cluster Image Layering in OpenShift 4.19 allows modifications to node the operating system. This detailed walk through customizes the node operating system image by adding RPMs to support autofs.
+CoreOS On-cluster Image Layering added in OpenShift 4.19 allows modifications to the node operating system. This detailed walk through customizes the node operating system image by adding RPMs to support autofs.
 
 In [part 2][14] we will configure autofs and enable automatic filesystem mounting across cluster nodes.
 
@@ -77,7 +77,7 @@ The custom image we are creating must be pushed to a container image registry. T
 
 ## Creating Pull Secrets for the Image Build
 
-To upload (push) or download (pull) an image from a registry requires a credential called a "pull-secret". 
+To upload (push) or download (pull) an image from a registry requires a credential called a "pull-secret".
 
 OpenShift includes a global pull secret which is supplied during installation and stored in the `openshift-config` namespace. This has privilege to download the base CoreOS image, but we also need a credential to push our custom image to a registry.
 
@@ -192,7 +192,7 @@ metadata:
 spec:
   machineConfigPool:
     name: worker-automount
-  containerFile: 
+  containerFile:
   - content: |-
       FROM configs AS final
       RUN dnf install -y \
@@ -201,15 +201,15 @@ spec:
         openldap-clients \
         && dnf clean all \
         && ostree container commit
-  imageBuilder: 
+  imageBuilder:
     imageBuilderType: Job
-  baseImagePullSecret: 
+  baseImagePullSecret:
     # baseImagePullSecret is the secret used to pull the base image
     name: pull-and-push-secret
-  renderedImagePushSecret: 
+  renderedImagePushSecret:
     # renderedImagePushSecret is the secret used to push the custom image
     name: push-secret
-  renderedImagePushSpec: image-registry.openshift-image-registry.svc:5000/openshift-machine-config-operator/os-image:latest 
+  renderedImagePushSpec: image-registry.openshift-image-registry.svc:5000/openshift-machine-config-operator/os-image:latest
 ```
 _[MachineOSConfig][4]_
 
@@ -225,7 +225,7 @@ On line 7 we are specifying that this MachineOSConfig is to be applied to the "w
 Here is what happens when you create a `MachineOSConfig` named "worker-automount":
 * creates a `deployment/machine-os-builder` which creates a `pod/machine-os-builder-<hash>`
 * `pod/machine-os-builder-<hash>` waits to acquire a lease
-* `pod/machine-os-builder-<hash>` creates a `machineosbuild/worker-automount-<hash>` resource  
+* `pod/machine-os-builder-<hash>` creates a `machineosbuild/worker-automount-<hash>` resource
 * `pod/machine-os-builder-<hash>` creates a `job/build-worker-automount-<hash>`
 * `job/build-worker-automount-<hash>`  creates a `pod/build-worker-automount-<hash>` to perform the build.
 * This pod log shows the build progress. ^
