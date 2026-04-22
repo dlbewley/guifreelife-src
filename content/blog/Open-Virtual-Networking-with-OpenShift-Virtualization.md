@@ -1,7 +1,7 @@
 ---
 title: "Open Virtual Networking with OpenShift Virtualization"
 date: 2026-03-18
-banner: /images/cat-loves-ovn.png
+banner: /images/udn-controller.png
 # banner: /images/cat-loves-nncp.png
 layout: post
 mermaid: true
@@ -27,111 +27,435 @@ Open Virtual Network enables a high level representation of a software defined n
 <!--
 Demo Script:
 
-
  -->
 
 # Kubernetes Resource Management is API-First
 
 All resources are managed by [APIs in Kubernetes][2]. This may be a new concept to some, but it is a great advantage over traditional infrastructure.
-These APIs can be driven by the web console, by the command line, or application of resources via GitOps. The interface to these APIs are mediated by Resource Definitions.
+These APIs can be driven by the web console, by the command line, or application of resources using GitOps. The interfaces to these APIs are mediated by Custom Resource Definitions.
 
 There are a number of standard resources on every cluster like `pods`, `services`, `deployments`, and additional custom resource definitions may be made available by installing operators like [NMstate][3] or [KubeVirt][4].
 
 This means anytime you seek to understand how to accomplish a task in Kubernetes you should start by learning what resources exist.
 
-> {{< collapsable prompt="⭐ **Pro Tip:** Identify resource definitions with the `oc api-resources` command and grep filter." collapse=true md=true >}}
-Keep in mind that the same name may be used by more than one API. This can be disambiguated with the `--api-group` argument.
-```bash {linenos=inline,hl_lines=[5,11,12]}
-# 4.19.9
-$  oc api-resources | grep -i network | sort
-adminnetworkpolicies                       anp                                                                                    policy.networking.k8s.io/v1alpha1                     false        AdminNetworkPolicy
-baselineadminnetworkpolicies               banp                                                                                   policy.networking.k8s.io/v1alpha1                     false        BaselineAdminNetworkPolicy
-clusteruserdefinednetworks                                                                                                        k8s.ovn.org/v1                                        false        ClusterUserDefinedNetwork
-egressrouters                                                                                                                     network.operator.openshift.io/v1                      true         EgressRouter
-gatewayclasses                             gc                                                                                     gateway.networking.k8s.io/v1                          false        GatewayClass
-gateways                                   gtw                                                                                    gateway.networking.k8s.io/v1                          true         Gateway
-grpcroutes                                                                                                                        gateway.networking.k8s.io/v1                          true         GRPCRoute
-httproutes                                                                                                                        gateway.networking.k8s.io/v1                          true         HTTPRoute
-ingressclasses                                                                                                                    networking.k8s.io/v1                                  false        IngressClass
-ingresses                                  ing                                                                                    networking.k8s.io/v1                                  true         Ingress
-multi-networkpolicies                      multi-policy                                                                           k8s.cni.cncf.io/v1beta1                               true         MultiNetworkPolicy
-network-attachment-definitions             net-attach-def                                                                         k8s.cni.cncf.io/v1                                    true         NetworkAttachmentDefinition
-networkaddonsconfigs                                                                                                              networkaddonsoperator.network.kubevirt.io/v1          false        NetworkAddonsConfig
-networkfenceclasses                                                                                                               csiaddons.openshift.io/v1alpha1                       false        NetworkFenceClass
-networkfences                                                                                                                     csiaddons.openshift.io/v1alpha1                       false        NetworkFence
-networkmaps                                                                                                                       forklift.konveyor.io/v1beta1                          true         NetworkMap
-networkpolicies                            netpol                                                                                 networking.k8s.io/v1                                  true         NetworkPolicy
-networks                                                                                                                          config.openshift.io/v1                                false        Network
-networks                                                                                                                          operator.openshift.io/v1                              false        Network
-nodenetworkconfigurationenactments         nnce                                                                                   nmstate.io/v1beta1                                    false        NodeNetworkConfigurationEnactment
-nodenetworkconfigurationpolicies           nncp                                                                                   nmstate.io/v1                                         false        NodeNetworkConfigurationPolicy
-nodenetworkstates                          nns                                                                                    nmstate.io/v1beta1                                    false        NodeNetworkState
-operatorpkis                                                                                                                      network.operator.openshift.io/v1                      true         OperatorPKI
-podnetworkconnectivitychecks                                                                                                      controlplane.operator.openshift.io/v1alpha1           true         PodNetworkConnectivityCheck
-referencegrants                            refgrant                                                                               gateway.networking.k8s.io/v1beta1                     true         ReferenceGrant
-userdefinednetworks                                                                                                               k8s.ovn.org/v1                                        true         UserDefinedNetwork
-```
-{{< /collapsable >}}
+# Networking APIs in OpenShift
 
-Once you identify the relevant resources for a task, you may want to read a description of the resource or find out read and write an instance of the resource in a YAML manifest.
+This list will vary depending on the version of OpenShift (below is 4.21) and what operators are installed.
 
-> {{< collapsable prompt="⭐ **Pro Tip:** Learn how to write resource manifests with the `oc explain` command" collapse=true md=true >}}
-```text
-$ oc explain multi-policy | head -10
-GROUP:      k8s.cni.cncf.io
-KIND:       MultiNetworkPolicy
-VERSION:    v1beta1
-
-DESCRIPTION:
-    MultiNetworkPolicy is a CRD schema to provide NetworkPolicy mechanism for
-    net-attach-def which is specified by the Network Plumbing Working Group.
-    MultiNetworkPolicy is identical to Kubernetes NetworkPolicy, See:
-    https://kubernetes.io/docs/concepts/services-networking/network-policies/ .
-
-$ oc explain multi-policy.spec.ingress
-GROUP:      k8s.cni.cncf.io
-KIND:       MultiNetworkPolicy
-VERSION:    v1beta1
-
-FIELD: ingress <[]Object>
-
-DESCRIPTION:
-    List of ingress rules to be applied to the selected pods. Traffic is allowed
-    to a pod if there are no NetworkPolicies selecting the pod (and cluster
-    policy otherwise allows the traffic), OR if the traffic source is the pod's
-    local node, OR if the traffic matches at least one ingress rule across all
-    of the NetworkPolicy objects whose podSelector matches the pod. If this
-    field is empty then this NetworkPolicy does not allow any traffic (and
-    serves solely to ensure that the pods it selects are isolated by default)
-    NetworkPolicyIngressRule describes a particular set of traffic that is
-    allowed to the pods matched by a NetworkPolicySpec's podSelector. The
-    traffic must match both ports and from.
-...
-```
-{{< /collapsable >}}
-
-
-## Networking Resource Managment in Kubernetes
-
-Here is your networking custom resource decoder ring!
-
-> {{< collapsable prompt="📺 **Network Configuration Resources** from NMstate and CNI api groups" collapse=false md=true >}}
+**Listing Networking API Groups**
 ```bash
-$ oc api-resources --api-group nmstate.io
+$ NETWORKING_API_GROUPS=$(
+    oc api-versions | \
+    grep -E '(ovn|cni|metallb|nmstate|network|ipam)' | \
+    sed 's#/v.*##' | sort -u)
+
+$ echo $NETWORKING_API_GROUPS
+frrk8s.metallb.io
+gateway.networking.k8s.io
+ipam.cluster.x-k8s.io
+ipam.metal3.io
+k8s.cni.cncf.io
+k8s.ovn.org
+metallb.io
+network.operator.openshift.io
+networkaddonsoperator.network.kubevirt.io
+networking.k8s.io
+nmstate.io
+policy.networking.k8s.io
+whereabouts.cni.cncf.io
+```
+
+> {{< collapsable prompt="📋 **Networking API Groups Detailed** Click to view all the networking APIs" collapse=true md=true >}}
+
+Now let's see what Custom Resource Definitions are provided by each of these networking related API Groups
+
+**Listing Networking APIs**
+```bash
+while read -r apig; do
+ echo "# $apig"
+ oc api-resources --api-group="$apig"
+done <<< "$NETWORKING_API_GROUPS"
+```
+
+- **`frrk8s.metallb.io` [Free Range Routing Kubernetes][14]**
+```bash
+$ oc api-resources --api-group="frrk8s.metallb.io"
+NAME                SHORTNAMES   APIVERSION                  NAMESPACED   KIND
+bgpsessionstates                 frrk8s.metallb.io/v1beta1   true         BGPSessionState
+frrconfigurations                frrk8s.metallb.io/v1beta1   true         FRRConfiguration
+frrnodestates                    frrk8s.metallb.io/v1beta1   false        FRRNodeState
+```
+
+- **`gateway.networking.k8s.io` [Gateway API][15]**
+```bash
+$ oc api-resources --api-group="gateway.networking.k8s.io"
+NAME              SHORTNAMES   APIVERSION                          NAMESPACED   KIND
+gatewayclasses    gc           gateway.networking.k8s.io/v1        false        GatewayClass
+gateways          gtw          gateway.networking.k8s.io/v1        true         Gateway
+grpcroutes                     gateway.networking.k8s.io/v1        true         GRPCRoute
+httproutes                     gateway.networking.k8s.io/v1        true         HTTPRoute
+referencegrants   refgrant     gateway.networking.k8s.io/v1beta1   true         ReferenceGrant
+```
+
+- **`ingress.operator.openshift.io` [OpenShift Ingress Operator][16]**
+```bash
+$ oc api-resources --api-group="ingress.operator.openshift.io"
+NAME         SHORTNAMES   APIVERSION                         NAMESPACED   KIND
+dnsrecords                ingress.operator.openshift.io/v1   true         DNSRecord
+```
+
+- **`ipam.cluster.x-k8s.io` [Cluster API IPAM][17]**
+```bash
+$ oc api-resources --api-group="ipam.cluster.x-k8s.io"
+NAME              SHORTNAMES   APIVERSION                      NAMESPACED   KIND
+ipaddressclaims                ipam.cluster.x-k8s.io/v1beta1   true         IPAddressClaim
+ipaddresses                    ipam.cluster.x-k8s.io/v1beta1   true         IPAddress
+```
+
+- **`ipam.metal3.io` [Metal3 IP Address Manager][18]**
+```bash
+$ oc api-resources --api-group="ipam.metal3.io"
+NAME          SHORTNAMES                                                                                  APIVERSION                NAMESPACED   KIND
+ipaddresses   ipa,ipaddress,m3ipa,m3ipaddress,m3ipaddresses,metal3ipa,metal3ipaddress,metal3ipaddresses   ipam.metal3.io/v1alpha1   true         IPAddress
+ipclaims      ipc,ipclaim,m3ipc,m3ipclaim,m3ipclaims,metal3ipc,metal3ipclaim,metal3ipclaims               ipam.metal3.io/v1alpha1   true         IPClaim
+ippools       ipp,ippool,m3ipp,m3ippool,m3ippools,metal3ipp,metal3ippool,metal3ippools                    ipam.metal3.io/v1alpha1   true         IPPool
+```
+
+- **`k8s.cni.cncf.io` [Multus CNI][19]**
+```bash
+$ oc api-resources --api-group="k8s.cni.cncf.io"
+NAME                             SHORTNAMES       APIVERSION                 NAMESPACED   KIND
+ipamclaims                                        k8s.cni.cncf.io/v1alpha1   true         IPAMClaim
+multi-networkpolicies            multi-policy     k8s.cni.cncf.io/v1beta1    true         MultiNetworkPolicy
+network-attachment-definitions   net-attach-def   k8s.cni.cncf.io/v1         true         NetworkAttachmentDefinition
+```
+
+- **`k8s.ovn.org` [OVN-Kubernetes][11]**
+```bash
+$ oc api-resources --api-group="k8s.ovn.org"
+NAME                             SHORTNAMES         APIVERSION       NAMESPACED   KIND
+adminpolicybasedexternalroutes   apbexternalroute   k8s.ovn.org/v1   false        AdminPolicyBasedExternalRoute
+clusteruserdefinednetworks                          k8s.ovn.org/v1   false        ClusterUserDefinedNetwork
+egressfirewalls                                     k8s.ovn.org/v1   true         EgressFirewall
+egressips                        eip                k8s.ovn.org/v1   false        EgressIP
+egressqoses                                         k8s.ovn.org/v1   true         EgressQoS
+egressservices                                      k8s.ovn.org/v1   true         EgressService
+routeadvertisements              ra                 k8s.ovn.org/v1   false        RouteAdvertisements
+userdefinednetworks                                 k8s.ovn.org/v1   true         UserDefinedNetwork
+```
+
+- **`metallb.io` [MetalLB][20]**
+```bash
+$ oc api-resources --api-group="metallb.io"
+NAME                  SHORTNAMES   APIVERSION           NAMESPACED   KIND
+bfdprofiles                        metallb.io/v1beta1   true         BFDProfile
+bgpadvertisements                  metallb.io/v1beta1   true         BGPAdvertisement
+bgppeers                           metallb.io/v1beta2   true         BGPPeer
+communities                        metallb.io/v1beta1   true         Community
+configurationstates                metallb.io/v1beta1   true         ConfigurationState
+ipaddresspools                     metallb.io/v1beta1   true         IPAddressPool
+l2advertisements                   metallb.io/v1beta1   true         L2Advertisement
+metallbs                           metallb.io/v1beta1   true         MetalLB
+servicebgpstatuses                 metallb.io/v1beta1   true         ServiceBGPStatus
+servicel2statuses                  metallb.io/v1beta1   true         ServiceL2Status
+```
+
+- **`network.operator.openshift.io` [OpenShift Cluster Network Operator][21]**
+```bash
+$ oc api-resources --api-group="network.operator.openshift.io"
+NAME            SHORTNAMES   APIVERSION                         NAMESPACED   KIND
+egressrouters                network.operator.openshift.io/v1   true         EgressRouter
+operatorpkis                 network.operator.openshift.io/v1   true         OperatorPKI
+```
+
+- **`networkaddonsoperator.network.kubevirt.io` [KubeVirt Cluster Network Addons Operator][22]**
+```bash
+$ oc api-resources --api-group="networkaddonsoperator.network.kubevirt.io"
+NAME                   SHORTNAMES   APIVERSION                                     NAMESPACED   KIND
+networkaddonsconfigs                networkaddonsoperator.network.kubevirt.io/v1   false        NetworkAddonsConfig
+```
+
+- **`networking.k8s.io` [Kubernetes Networking API][23]**
+```bash
+$ oc api-resources --api-group="networking.k8s.io"
+NAME              SHORTNAMES   APIVERSION             NAMESPACED   KIND
+ingressclasses                 networking.k8s.io/v1   false        IngressClass
+ingresses         ing          networking.k8s.io/v1   true         Ingress
+ipaddresses       ip           networking.k8s.io/v1   false        IPAddress
+networkpolicies   netpol       networking.k8s.io/v1   true         NetworkPolicy
+servicecidrs                   networking.k8s.io/v1   false        ServiceCIDR
+```
+
+- **`nmstate.io` [Kubernetes NMState][24]**
+```bash
+$ oc api-resources --api-group="nmstate.io"
 NAME                                 SHORTNAMES   APIVERSION           NAMESPACED   KIND
 nmstates                                          nmstate.io/v1        false        NMState
 nodenetworkconfigurationenactments   nnce         nmstate.io/v1beta1   false        NodeNetworkConfigurationEnactment
 nodenetworkconfigurationpolicies     nncp         nmstate.io/v1        false        NodeNetworkConfigurationPolicy
 nodenetworkstates                    nns          nmstate.io/v1beta1   false        NodeNetworkState
+```
 
-$ oc api-resources --api-group  k8s.cni.cncf.io
-NAME                             SHORTNAMES       APIVERSION                NAMESPACED   KIND
-multi-networkpolicies            multi-policy     k8s.cni.cncf.io/v1beta1   true         MultiNetworkPolicy
-network-attachment-definitions   net-attach-def   k8s.cni.cncf.io/v1        true         NetworkAttachmentDefinition
+- **`policy.networking.k8s.io` [Network Policy API][25]**
+```bash
+$ oc api-resources --api-group="policy.networking.k8s.io"
+NAME                           SHORTNAMES   APIVERSION                          NAMESPACED   KIND
+adminnetworkpolicies           anp          policy.networking.k8s.io/v1alpha1   false        AdminNetworkPolicy
+baselineadminnetworkpolicies   banp         policy.networking.k8s.io/v1alpha1   false        BaselineAdminNetworkPolicy
+```
+
+- **`route.openshift.io` [OpenShift Route API][26]**
+```bash
+$ oc api-resources --api-group="route.openshift.io"
+NAME     SHORTNAMES   APIVERSION              NAMESPACED   KIND
+routes                route.openshift.io/v1   true         Route
+```
+
+- **`whereabouts.cni.cncf.io` [Whereabouts CNI IPAM][27]**
+```bash
+$ oc api-resources --api-group="whereabouts.cni.cncf.io"
+NAME                             SHORTNAMES   APIVERSION                         NAMESPACED   KIND
+ippools                                       whereabouts.cni.cncf.io/v1alpha1   true         IPPool
+nodeslicepools                                whereabouts.cni.cncf.io/v1alpha1   true         NodeSlicePool
+overlappingrangeipreservations                whereabouts.cni.cncf.io/v1alpha1   true         OverlappingRangeIPReservation
+```
+
+<!-- Duplicated for collapsable only: markdownify cannot see link defs outside .Inner (same URLs as # References). -->
+[11]: <https://ovn-kubernetes.io/> "OVN-Kubernetes"
+[14]: <https://github.com/metallb/frr-k8s> "Free Range Routing Kubernetes (frr-k8s)"
+[15]: <https://gateway-api.sigs.k8s.io/> "Gateway API"
+[16]: <https://github.com/openshift/cluster-ingress-operator> "OpenShift Cluster Ingress Operator"
+[17]: <https://cluster-api.sigs.k8s.io/developer/providers/contracts/ipam> "Cluster API IPAM Contract"
+[18]: <https://github.com/metal3-io/ip-address-manager> "Metal3 IP Address Manager"
+[19]: <https://k8snetworkplumbingwg.github.io/multus-cni/> "Multus CNI"
+[20]: <https://metallb.io/> "MetalLB"
+[21]: <https://github.com/openshift/cluster-network-operator> "OpenShift Cluster Network Operator"
+[22]: <https://github.com/kubevirt/cluster-network-addons-operator> "KubeVirt Cluster Network Addons Operator"
+[23]: <https://kubernetes.io/docs/concepts/services-networking/> "Kubernetes Services and Networking"
+[24]: <https://nmstate.io/kubernetes-nmstate/> "Kubernetes NMState"
+[25]: <https://network-policy-api.sigs.k8s.io/> "Network Policy API"
+[26]: <https://docs.openshift.com/container-platform/latest/networking/routes/secured-routes.html> "OpenShift Route Documentation"
+[27]: <https://github.com/k8snetworkplumbingwg/whereabouts> "Whereabouts CNI IPAM"
+{{< /collapsable >}}
+
+
+There are a lot of Networking APIs, so which ones do you need to focus on?
+
+# Networking Resource Management in Kubernetes
+
+It is important to begin configuration at the host level. If you don't have the wires plugged into the correct ports and a configuration that matches the switch, you will not have a solid ground to build upon. The APIs that are most relevant for this first level starts with [NMstate][24].
+
+## Network Configuration with Network Configuration Operator
+
+[ ] Todo - how to cover this operator
+
+## Host Network Configuration with NMState
+
+Typically your default interface configuration including your external bridge (management interface) are configured by the installation process. This process may leverage the same NMStateConfig syntax as the NNCP we will discuss below, but there are supplied to the installer before NMState is even present.
+
+After installation, unless you have a fully automated install including configuration, you may need to configure additional bonds or bridges on the nodes. For example `bond1` and `br-vmdata` in the following diagram.
+
+```mermaid
+graph LR;
+    subgraph Cluster[" "]
+
+      subgraph Localnets["Physnet Mappings"]
+        physnet-ex[Localnet<br> 🧭 physnet]
+        physnet-vmdata[Localnet<br> 🧭 physnet-vmdata]
+      end
+
+      subgraph node1["🖥️ Node "]
+        br-ex[ OVS Bridge<br> 🔗 br-ex]
+        br-vmdata[ OVS Bridge<br> 🔗 br-vmdata]
+        node1-bond0[bond0 🔌]
+        node1-bond1[bond1 🔌]
+      end
+    end
+
+    physnet-ex -- maps to --> br-ex
+    physnet-vmdata --> br-vmdata
+    br-ex --> node1-bond0
+    br-vmdata --> node1-bond1
+
+    Internet["☁️ "]:::Internet
+    node1-bond0 ==default gw==> Internet
+    node1-bond1 ==(🏷️ 802.1q trunk)==> Internet
+
+    classDef bond0 fill:#37A3A3,color:#fff,stroke:#333,stroke-width:2px
+    class br-ex,physnet-ex,node1-bond0 bond0
+
+    classDef bond1 fill:#9ad8d8,color:#fff,stroke:#333,stroke-width:2px
+    class br-vmdata,physnet-vmdata,node1-bond1 bond1
+
+    classDef labels stroke-width:1px,color:#fff,fill:#005577
+    classDef networks fill:#cdd,stroke-width:0px
+
+    style Localnets fill:#fff,color:#aaa,stroke:#000,stroke-width:1px
+    style Cluster color:#000,fill:#fff,stroke:#333,stroke-width:0px
+    style Internet fill:none,stroke-width:0px,font-size:+2em
+
+    classDef nodes fill:#fff,stroke:#000,stroke-width:3px
+    class node1,node2,node3 nodes
+
+    classDef nad-1924 fill:#00ffff,color:#00f,stroke:#333,stroke-width:1px
+    class nad-1924-client,nad-1924-ldap,nad-1924-nfs nad-1924
+```
+
+
+The NMState API group from the operator of the same name, is used to configure node level networking.
+
+- `nmstate.io` [Kubernetes NMState][24]
+```bash
+$ oc api-resources --api-group="nmstate.io"
+NAME                                 SHORTNAMES   APIVERSION           NAMESPACED   KIND
+nmstates                                          nmstate.io/v1        false        NMState
+nodenetworkconfigurationenactments   nnce         nmstate.io/v1beta1   false        NodeNetworkConfigurationEnactment
+nodenetworkconfigurationpolicies     nncp         nmstate.io/v1        false        NodeNetworkConfigurationPolicy
+nodenetworkstates                    nns          nmstate.io/v1beta1   false        NodeNetworkState
+```
+
+Once you identify the relevant resources for a task, you may want to read a description of the resource or find out read and write an instance of the resource in a YAML manifest.
+
+> {{< collapsable prompt="⭐ **Pro Tip:** Learn how to write resource manifests with the `oc explain` command" collapse=true md=true >}}
+```yaml
+$ oc explain nncp.spec
+GROUP:      nmstate.io
+KIND:       NodeNetworkConfigurationPolicy
+VERSION:    v1
+
+FIELD: spec <Object>
+
+
+DESCRIPTION:
+    NodeNetworkConfigurationPolicySpec defines the desired state of
+    NodeNetworkConfigurationPolicy
+
+FIELDS:
+  capture       <map[string]string>
+    Capture contains expressions with an associated name than can be referenced
+    at the DesiredState.
+
+  desiredState  <Object>
+    The desired configuration of the policy
+
+  maxUnavailable        <Object>
+    MaxUnavailable specifies percentage or number
+    of machines that can be updating at a time. Default is "50%".
+
+  nodeSelector  <map[string]string>
+    NodeSelector is a selector which must be true for the policy to be applied
+    to the node.
+    Selector which must match a node's labels for the policy to be scheduled on
+    that node.
+    More info:
+    https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
 ```
 {{< /collapsable >}}
 
-Notice above that a `net-attach-def` resource is namespaced, and that a `nncp` is not. Because an NNCP is generally an underlying host level configuration and a network attachment definition can be made available to all user by placing in a namspace called "default" or they can be limited through RBAC place placing them only in the appropriate namespaces.
+Notice above that a `NodeNetworkConfigurationPolicy` resource is not namespaced. A `NNCP` resource is cluster scoped, which means you can only have one NNCP with name "xyz". The NNCP can be targeted to a subset of nodes though. This is done using a NodeSelector value in the NNCP, and will be important if you have different networking connectivity in different servers. All the APIs in NMState are cluster scoped, in fact.
+
+### Node Network State Resource
+
+Once NMstate is installed and enabled, it will create and maintain a respresentation of each node's network state in a `NodeNetworkState` resource. You can see above that the shortname is `nns`.  We talked about this resource in [my last blog post][29] about [OVN Recon][30].
+
+From the NNS, with a little `jq` magic we can learn all kinds of facts, including what NICs are installed and what driver they are using for example. This is also represented in the OpenShift console for browsing.
+
+```bash
+$ oc get nns/$NODE_NAME -o json |  \
+  jq -c '.status.currentState.interfaces[]|select(.type=="ethernet") \
+  |{"name":.name, "max-mtu":."max-mtu", "driver":.driver}';
+```
+```json
+{"name":"ens192","max-mtu":9000,"driver":"vmxnet3"}
+{"name":"ens224","max-mtu":9000,"driver":"vmxnet3"}
+{"name":"genev_sys_6081","max-mtu":65465,"driver":null}
+```
+
+### Adding a Bond Interface
+
+As an example, imagine we have 4 network interfaces called eno1, eno2, eno3, and eno4. At install time we may have selected to bind eno1 and eno2 into bond0. This bond will pass the default traffic including any overlay networks.
+
+Now on day 2 we want to add a second bond which will be dedicated to virtual machine traffic. There are multiple [bonding modes supported by OpenShift Virtualization][31], but we will use LACP here.
+
+We will create a NNCP to define the bond1 interface.
+
+```yaml
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+ name: bond1
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+  desiredState:
+   interfaces:
+     - name: bond1
+       type: bond
+       state: up
+       ipv4:
+         enabled: false
+       link-aggregation:
+         mode: 802.3ad
+         options:
+           miimon: "150"
+         port:
+           - eno3
+           - eno4
+```
+
+### Adding an OVS Bridge
+
+Once we have a physical connection to a secondary external network, we need to create a logical switch that will use this bond1 port as its "uplink" to the physical network segment plugged into it. This will be akin to a distributed vSwitch on another platform.
+
+Again, we use an `NNCP` to create this.
+
+- [nncp-bridge.yaml](https://github.com/dlbewley/demo-rhone-26/blob/main/components/br-vmdata/nncp.yaml)
+```yaml
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: br-vmdata
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+  desiredState:
+    interfaces:
+      - name: br-vmdata
+        type: ovs-bridge
+        state: up
+        bridge:
+          allow-extra-patch-ports: true
+          options:
+            stp: false
+          port:
+            - name: bond1
+```
+
+### Naming the Physical Network
+
+We have created a bond, we have added a bridge to that bond, and now we must give a name to this physical network. You may see this name referred to as a "bridge-mapping" or a "physicalNetworkName" or a "external network". You can simply think of this as an alias for the bridge, and it will be used to direct network connections to the bridge and out the port.
+
+Here is the NNCP to create the external network name.
+
+
+- [nncp-mapping.yaml](https://github.com/dlbewley/demo-rhone-26/blob/main/components/physnet-mapping/nncp.yaml)
+```yaml
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: ovs-bridge-mapping-physnet-vmdata
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+  desiredState:
+    ovn:
+      bridge-mappings:
+        - localnet: physnet-vmdata
+          bridge: br-vmdata
+          state: present
+```
+
+----- later
 
 The NAD includes a blob of JSON data that defines a [CNI configuration][6]. The configuration drives a plugin that is one of several "types" with each type having additional arguments.
 
@@ -141,9 +465,9 @@ There are many, but these two are our focus here.
 
 * `cnv-bridge` - Use when attaching to a Linux Bridge
 * `ovn-k8s-cni-overlay` - Has a [topology parameter][8] which may be:
-  * `localnet` - Define network local to the node (datacenter networks)
-  * `layer2` - Define an overlay network (eg a private replication or healthcheck network)
-  * `layer3` - Define a routeable overlay network
+  * `Localnet` - Define network local to the node (datacenter networks)
+  * `Layer2` - Define an overlay network (eg a private replication or healthcheck network)
+  * `Layer3` - Define a routeable overlay network
 
 We are
 https://github.com/ovn-org/ovn-kubernetes/blob/master/docs/multi-homing.md#configuring-secondary-networks
@@ -157,122 +481,6 @@ Unfortunately, when it comes to localnet, the NAD is overloaded. Not only does i
 
 To attach a virtual machine to a "physical" network in a datacenter, as opposed to the private cluster network already present on the OpenShift cluster, requires the coordination of a few resources.
 
-
-## Plumbing the VLAN to the Hypervisors
-
-OpenShift servers are refered to as Nodes and those nodes participate in a cluster wide virtual network. Pods or containers running in the cluster are attached to what kubernetes calls the "cluster network", which is 10.128.0.0/14 by default.
-
-> {{< collapsable prompt="📺 **Cluster Network**" collapse=false md=true >}}
-OpenShift exposes an API to configure the default cluster networking.
-```yaml {linenos=inline,hl_lines=[11,12]}
- oc describe networks.config.openshift.io/cluster
-Name:         cluster
-Namespace:
-Labels:       <none>
-Annotations:  <none>
-API Version:  config.openshift.io/v1
-Kind:         Network
-Metadata:
-  ...snip
-Spec:
-  Cluster Network:
-    Cidr:         10.128.0.0/14
-    Host Prefix:  23
-  External IP:
-    Policy:
-  Network Type:  OVNKubernetes
-  Service Network:
-    172.30.0.0/16
-...snip
-```
-{{< /collapsable >}}
-
-Traffic from a pod will normally egress from the cluster by way of a default bridge called `br-ex` where it will be Network Address Translated to the IP address found on `br-ex`. This is IP address comes from what is known as the Machine Network.
-
-The ability to attach a pod to a network that is not the cluster network, means to attach to a "secondary network". We will do this by defining a "localnet".
-
-# Complete Example Network
-
-The bridge from the software defined network out to the physical network may be the existing `br-ex` bridge created at installation time, or it may be a bridge defined on a second Network Interface Card or a bonding of NICs in the underlying server.
-
-> {{< collapsable prompt="📝 **NodeNetworkConfigurationPolicy** `nncp-br-vmdata.yaml`" collapse=true md=true >}}
-```yaml {linenos=inline,hl_lines=[11,23]}
----
-apiVersion: nmstate.io/v1
-kind: NodeNetworkConfigurationPolicy
-metadata:
-  name: br-vmdata-ovs
-spec:
-  nodeSelector:
-    machine.openshift.io/cluster-api-machineset: hub-tq2sk-cnv
-  desiredState:
-    interfaces:
-      - name: br-vmdata
-        description: |-
-          A dedicated OVS bridge with ens224 as a port
-          allowing all VLANs and untagged traffic.
-          Networks will be mapped to this brige via ovn.bridge-mappings in NNCPs
-          associated with creation of those localnet networks.
-        type: ovs-bridge
-        state: up
-        bridge:
-          options:
-            stp: true
-          port:
-            - name: ens224
-```
-{{< /collapsable >}}
-
-The bridge may carry multiple VLAN tags that are supplied from the switch to the NIC on an 802.1q trunk. Each VLAN can then be identified as a "localnet" network on the OVN network.
-
-> {{< collapsable prompt="📝 **NetworkAttachmentDefinition** `nad-vlan-1924.yaml`" collapse=true md=true >}}
-**Important** the NAD name (line 7) need not match the network name found in the CNI config (line 16), however, the netAttachDefName (line 19) must include the proper namespace and nad name.
-```yaml {linenos=inline,hl_lines=[7,16,19]}
----
-apiVersion: k8s.cni.cncf.io/v1
-kind: NetworkAttachmentDefinition
-metadata:
-  annotations:
-    description: Lab Network 192.168.4.0/24 V1924 via OVS Bridge
-  name: vlan-1924
-  namespace: default
-spec:
-  # the name below is the name of a cluster-scoped "network"
-  # this network will be mapped to an appropriate bridge
-  # via NNCP in an OVN bridge-mapping
-  config: |-
-    {
-      "cniVersion": "0.3.1",
-      "name": "vlan-1924",
-      "type": "ovn-k8s-cni-overlay",
-      "topology": "localnet",
-      "netAttachDefName": "default/vlan-1924",
-      "vlanID": 1924,
-      "ipam": {}
-    }
-```
-{{< /collapsable >}}
-
-{{< figure src="/images/ovn-perplexity.png" >}}
-
-Once a network is defined by a multis CNI config, (see line 16 above), then that network can be mapped to an OVS bridge using an NNCP like the following.
-
-> {{< collapsable prompt="📝 **NodeNetworkConfigurationPolicy** `nncp-map-vlan-1924.yaml`" collapse=true md=true >}}
-```yaml {linenos=inline,hl_lines=[10,11]}
----
-apiVersion: nmstate.io/v1
-kind: NodeNetworkConfigurationPolicy
-metadata:
-  name: ovs-bridge-mapping-1924
-spec:
-  desiredState:
-    ovn:
-      bridge-mappings:
-        - localnet: vlan-1924
-          bridge: br-vmdata
-          state: present
-```
-{{< /collapsable >}}
 
 # Visualizing The Network Configuration Resources
 
@@ -606,10 +814,25 @@ It is important to understand that the name found in the multus config defines a
 
 * [Secondary networks connected to the physical underlay for KubeVirt VMs using OVN-Kubernetes][1] - kubevirt.io
 * [Kubernetes API Concepts][2]
-* [NMstate][3]
+* [NMstate][3], [OpenShift 4.21 NMState Operator Docs][28]
 * [KubeVirt][4]
 * [Connecting OpenShift VM to an OVN Secondary Network][5] - OpenShift Docs
 * [CNI Specification][6]
+* [Free Range Routing Kubernetes (frr-k8s)][14]
+* [Gateway API][15]
+* [OpenShift Cluster Ingress Operator][16]
+* [Cluster API IPAM Contract][17]
+* [Metal3 IP Address Manager][18]
+* [Multus CNI][19]
+* [MetalLB][20]
+* [OpenShift Cluster Network Operator][21]
+* [KubeVirt Cluster Network Addons Operator][22]
+* [Kubernetes Services and Networking][23]
+* [Kubernetes NMState][24]
+* [Network Policy API][25]
+* [OpenShift Route Documentation][26]
+* [Whereabouts CNI IPAM][27]
+* [Which bonding modes work when used with a bridge that virtual machine guests or containers connect to?][31]
 
 [1]: <https://kubevirt.io/2023/OVN-kubernetes-secondary-networks-localnet.html> "Secondary networks connected to the physical underlay for KubeVirt VMs using OVN-Kubernetes"
 [2]: <https://kubernetes.io/docs/reference/using-api/api-concepts/> "Kubernetes API Concepts"
@@ -624,3 +847,21 @@ It is important to understand that the name found in the multus config defines a
 [11]: <https://ovn-kubernetes.io/> "OVN-Kubernetes"
 [12]: <https://github.com/k8snetworkplumbingwg/multus-cni> "Multus CNI"
 [13]: <https://kubernetes.io/docs/concepts/services-networking/#the-kubernetes-network-model> "The Kubernetes Network Model"
+[14]: <https://github.com/metallb/frr-k8s> "Free Range Routing Kubernetes (frr-k8s)"
+[15]: <https://gateway-api.sigs.k8s.io/> "Gateway API"
+[16]: <https://github.com/openshift/cluster-ingress-operator> "OpenShift Cluster Ingress Operator"
+[17]: <https://cluster-api.sigs.k8s.io/developer/providers/contracts/ipam> "Cluster API IPAM Contract"
+[18]: <https://github.com/metal3-io/ip-address-manager> "Metal3 IP Address Manager"
+[19]: <https://k8snetworkplumbingwg.github.io/multus-cni/> "Multus CNI"
+[20]: <https://metallb.io/> "MetalLB"
+[21]: <https://github.com/openshift/cluster-network-operator> "OpenShift Cluster Network Operator"
+[22]: <https://github.com/kubevirt/cluster-network-addons-operator> "KubeVirt Cluster Network Addons Operator"
+[23]: <https://kubernetes.io/docs/concepts/services-networking/> "Kubernetes Services and Networking"
+[24]: <https://nmstate.io/kubernetes-nmstate/> "Kubernetes NMState"
+[25]: <https://network-policy-api.sigs.k8s.io/> "Network Policy API"
+[26]: <https://docs.openshift.com/container-platform/latest/networking/routes/secured-routes.html> "OpenShift Route Documentation"
+[27]: <https://github.com/k8snetworkplumbingwg/whereabouts> "Whereabouts CNI IPAM"
+[28]: <https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/networking_operators/k8s-nmstate-about-the-k8s-nmstate-operator> "OpenShift 4.21 NMState Operator Docs"
+[29]: {{< ref "/blog/OVN-Recon-Making-OpenShift-Networking-Connections.md" >}} "Announcing OVN Recon"
+[30]: <https://github.com/dlbewley/ovn-recon/> "OVN Recon"
+[31]: <https://access.redhat.com/solutions/67546> "Which bonding modes work when used with a bridge that virtual machine guests or containers connect to?"
