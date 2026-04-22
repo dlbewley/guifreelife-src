@@ -3,17 +3,17 @@ title: "OpenShift Virtual Guest Tagging"
 date: 2025-01-02
 banner: /images/vgt-trunk.jpeg
 layout: post
-mermaid: false
+mermaid: true
 asciinema: true
 tags:
   - networking
   - openshift
   - kubernetes
   - virtualization
-description: Some workloads require the use of VLAN tagged interfaces in virtual machines. VMware terms this feature VGT. OpenShift Virtualization supports this feature using traditional Linux Bridge interfaces. This post details and demonstrates an implementation.
+description: Some workloads require the use of VLAN tagged interfaces in virtual machines. VMware calls this feature VGT. OpenShift Virtualization supports this feature using traditional Linux Bridge interfaces. This post details and demonstrates an implementation.
 ---
 
-Some workloads require the use of VLAN interfaces in virtual machines. VMware terms this feature "Virtual Guest Tagging" or "VLAN Guest Tagging" while OpenStack calls it "VLAN-aware instances". See how OpenShift Virtualization can pass 802.1q trunks to VMs using a traditional Linux Bridge interface.
+Some workloads require the use of VLAN interfaces in virtual machines. VMware calls this feature "Virtual Guest Tagging" or "VLAN Guest Tagging" while OpenStack calls it "VLAN-aware instances". See how OpenShift Virtualization can pass 802.1q trunks to VMs using a traditional Linux Bridge interface.
 
 <!--more-->
 
@@ -37,9 +37,79 @@ OpenShift uses the [OVN-Kubernetes][4] CNI which includes support for a `localne
 
 Fortunately this can be accomplished using a Linux Bridge interface. Despite the name, a Linux Bridge has intelligence for handling frame construction and the ports attached to it like a switch.
 
-{{< figure src="/images/openshift-virt-vgt-node.png" title="OpenShift Node with 3 bridges" alt="OpenShift Node networking" >}}
+<!-- {{< figure src="/images/openshift-virt-vgt-node.png" title="OpenShift Node with 3 bridges" alt="OpenShift Node networking" >}} -->
+
+
+```mermaid
+graph BT;
+    subgraph Cluster[" "]
+
+
+        subgraph ns-client["📦 <b>firewall</b> Namespace"]
+          nad-vgt-client[NAD<br> 🛜 trunk]
+          subgraph vm-client["🔥 Firewall"]
+              vgt-client-eth0[eth0 🔌]
+              vgt-client-vlan1[eth0.1 🏷️]:::Vlan1
+              vgt-client-vlan2[eth0.2 🏷️]:::Vlan2
+          end
+        end
+
+      subgraph node1["🖥️ Node "]
+        br-ex[ OVS Bridge<br> 🔗 br-ex]
+        br-vmdata[ OVS Bridge<br> 🔗 br-vmdata]
+        br-linux[ Linux Bridge<br> 🔗 br-trunk]
+        node1-bond0[ens192 🔌]
+        node1-bond1[ens224 🔌]
+        node1-bond2[ens256 🔌]
+      end
+    end
+
+    br-ex --> node1-bond0
+    br-vmdata --> node1-bond1
+    br-linux --> node1-bond2
+    vgt-client-eth0 <==(🏷️ 802.1q trunk)==> br-linux
+    vgt-client-eth0 -.-> nad-vgt-client
+    nad-vgt-client -.->  br-linux
+    vgt-client-vlan1 --> vgt-client-eth0
+    vgt-client-vlan2 --> vgt-client-eth0
+
+    Internet["☁️ "]:::Internet
+    node1-bond0 ==default gw==> Internet
+    node1-bond1 ==(🏷️ 802.1q trunk)==> Internet
+    node1-bond2 ==(🏷️ 802.1q trunk)==> Internet
+
+    classDef bond0 fill:#37A3A3,color:#fff,stroke:#333,stroke-width:2px
+    class br-ex,physnet-ex,node1-bond0 bond0
+
+    classDef bond1 fill:#9ad8d8,color:#fff,stroke:#333,stroke-width:2px
+    class br-vmdata,physnet-vmdata,node1-bond1 bond1
+
+    classDef bond2 fill:#daf2f2,color:#004d4d,stroke:#333,stroke-width:2px
+    class nad-vgt-client,vgt-client-eth0,br-linux,node1-bond2 bond2
+
+    classDef Vlan1 fill:#fae2f2,color:#004d4d,stroke:#333,stroke-width:2px
+    classDef Vlan2 fill:#daffd2,color:#004d4d,stroke:#333,stroke-width:2px
+
+    classDef labels stroke-width:1px,color:#fff,fill:#005577
+    classDef networks fill:#cdd,stroke-width:0px
+
+    style Cluster color:#000,fill:#fff,stroke:#333,stroke-width:0px
+    style Internet fill:none,stroke-width:0px,font-size:+2em
+
+    classDef nodes fill:#fff,stroke:#000,stroke-width:3px
+    class node1,node2,node3 nodes
+
+    classDef vm color:#000,fill:#eee,stroke:#000,stroke-width:2px
+    class vm-client,vm-ldap,vm-nfs vm
+
+    classDef namespace color:#000,fill:#fff,stroke:#000,stroke-width:2px;
+    class ns-nfs,ns-client,ns-ldap namespace;
+```
 
 Above is a diagram of a node having 3 bridges. Bridge `br-ex` is the default management interface, the second `br-vmdata` was created to attach VMs to provider networks as `localnet` secondary networks. Both of these bridges are  OVS Bridges. The third bridge `br-trunk` is a [Linux Bridge][8] and was created only for the use case we are discussing here.
+
+The Firewall virtual machine has a single `eth0` physical interface, but it is receiving the 802.1q tags from the physical network which enables it to create VLAN logical interfaces for each tag.
+
 
 ## Creating the Linux Bridge
 
