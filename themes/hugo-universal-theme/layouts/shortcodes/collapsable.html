@@ -1,9 +1,12 @@
 <!-- file: collapsable.html -->
 <!-- based on expand.html https://vmonot.dev/post/hugo-expand-shortcode/ -->
-<!-- args: 
+<!-- args:
 	collapse={true,false}
 	prompt="text displayed before expand/collapse icon"
-	md={true,false} # render markdown
+	md={true,false} # render .Inner with markdownify
+	Reference-style links: markdownify only sees link defs present in .Inner. Duplicate needed [n]: lines
+	at the end of the shortcode body (same URLs as page References); do not use % delimiters — Goldmark
+	re-parses that output and can strip/break the expand HTML (prompt missing, toggle broken).
 -->
 <span class="expand">
 	<span class="expand-label"
@@ -13,9 +16,9 @@
 	</span>
 	<div class="expand-content" style="display:{{if (.Get `collapse`) }}none{{else}}block{{end}}; margin: 10px 0px 10px">
 		{{ if (.Get "md") }}
-		{{.Inner | markdownify}}
+		{{ .Inner | markdownify }}
 		{{ else }}
-		{{.Inner | safeHTML}}
+		{{ .Inner | safeHTML }}
 		{{ end }}
 	</div>
 </span>
