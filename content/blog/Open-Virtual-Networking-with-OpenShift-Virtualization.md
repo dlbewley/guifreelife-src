@@ -6,7 +6,7 @@ banner: /images/udn-controller.png
 layout: post
 mermaid: true
 asciinema: true
-draft: false
+draft: true
 tags:
   - draft
   - virtualization
