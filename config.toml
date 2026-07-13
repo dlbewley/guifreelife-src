@@ -2,7 +2,7 @@
 baseurl = "http://guifreelife.com"
 title = "GUI Free Life"
 themesDir = "themes"
-languageCode = "en-us"
+locale = "en-us"
 # Site language. Available translations in the theme's `/i18n` directory.
 defaultContentLanguage = "en"
 enableEmoji = true
@@ -140,7 +140,7 @@ pagerSize = 10
       """
 
 [Permalinks]
-    blog = "/blog/:year/:month/:day/:filename/"
+    blog = "/blog/:year/:month/:day/:contentbasename/"
 
 [params.mermaid]
     theme = "base"
