@@ -1,6 +1,6 @@
 {{ if isset .Site.Params "testimonials" }}
 {{ if .Site.Params.testimonials.enable }}
-{{ if gt (len .Site.Data.testimonials) 0 }}
+{{ if gt (len hugo.Data.testimonials) 0 }}
 <section class="bar background-pentagon no-mb">
     <div class="container">
         <div class="row">
@@ -20,7 +20,7 @@
                     data-autoplay="{{ default false .Site.Params.CarouselTestimonals.auto_play }}"
                     data-slide-speed="{{ default 2000 .Site.Params.CarouselTestimonals.slide_speed }}"
                     data-pagination-speed="{{ default 1000 .Site.Params.CarouselTestimonals.pagination_speed }}">
-                    {{ range .Site.Data.testimonials }}
+                    {{ range hugo.Data.testimonials }}
                     <li class="item">
                         <div class="testimonial same-height-always">
                             <div class="text">
