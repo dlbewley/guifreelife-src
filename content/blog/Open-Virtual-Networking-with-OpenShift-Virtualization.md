@@ -256,55 +256,6 @@ Typically your default interface configuration including your external bridge (m
 After installation, unless you have a fully automated install including configuration, you may need to configure additional bonds or bridges on the nodes. For example `bond1` and `br-vmdata` in the following diagram.
 
 ```mermaid
-graph BT;
-    subgraph Cluster[" "]
-
-      subgraph Localnets["Physnet Mappings"]
-        physnet-ex[Localnet<br> 🧭 physnet]
-        physnet-vmdata[Localnet<br> 🧭 physnet-vmdata]
-      end
-
-      subgraph node1["🖥️ Node "]
-        br-ex[ OVS Bridge<br> 🔗 br-ex]
-        br-vmdata[ OVS Bridge<br> 🔗 br-vmdata]
-        node1-bond0[bond0 🔌]
-        node1-bond1[bond1 🔌]
-      end
-    end
-
-    physnet-ex -- maps to --> br-ex
-    physnet-vmdata --> br-vmdata
-    br-ex --> node1-bond0
-    br-vmdata --> node1-bond1
-
-    Internet["☁️ "]:::Internet
-    Datacenter["🏢️ "]
-    node1-bond0 ==default gw==> Internet
-    node1-bond1 ==(🏷️ 802.1q trunk)==> Datacenter
-
-    classDef bond0 fill:#37A3A3,color:#fff,stroke:#333,stroke-width:2px
-    class br-ex,physnet-ex,node1-bond0 bond0
-
-    classDef bond1 fill:#9ad8d8,color:#fff,stroke:#333,stroke-width:2px
-    class br-vmdata,physnet-vmdata,node1-bond1 bond1
-
-    classDef labels stroke-width:1px,color:#fff,fill:#005577
-    classDef networks fill:#cdd,stroke-width:0px
-
-    style Localnets fill:#fff,color:#aaa,stroke:#000,stroke-width:1px
-    style Cluster color:#000,fill:#fff,stroke:#333,stroke-width:0px
-    style Internet fill:none,stroke-width:0px,font-size:+2em
-    style Datacenter fill:none,stroke-width:0px,font-size:+2em
-
-    classDef nodes fill:#fff,stroke:#000,stroke-width:3px
-    class node1,node2,node3 nodes
-
-    classDef nad-1924 fill:#00ffff,color:#00f,stroke:#333,stroke-width:1px
-    class nad-1924-client,nad-1924-ldap,nad-1924-nfs nad-1924
-```
-
-
-```mermaid
 graph LR;
     subgraph Cluster[" "]
 
@@ -492,7 +443,7 @@ Here is the NNCP to create the external network name.
 apiVersion: nmstate.io/v1
 kind: NodeNetworkConfigurationPolicy
 metadata:
-  name: physnet-vmdata
+  name: ovs-bridge-mapping-physnet-vmdata
 spec:
   nodeSelector:
     node-role.kubernetes.io/worker: ""
