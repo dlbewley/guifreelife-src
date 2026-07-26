@@ -226,21 +226,22 @@ Notice below that we set the refreshInterval to 0 so that the ESO is not continu
   apiVersion: external-secrets.io/v1
   kind: ExternalSecret
   metadata:
-  name: cloudinitdisk-client
+    name: cloudinitdisk-client
   spec:
-  refreshPolicy: OnChange
-  refreshInterval: "0"
-  secretStoreRef:
+    refreshPolicy: OnChange
+    refreshInterval: "0"
+    secretStoreRef:
       kind: ClusterSecretStore
       name: 1password-sdk
-  target:
-      name: cloudinitdisk-client # this will be the name of the created secret
+    target:
+      name: cloudinitdisk-client # this will be the name of the secret
       creationPolicy: Owner
-  data:
-  - secretKey: "userData" # this will be a field in the secret
+    data:
+
+    - secretKey: "userData" # this will be a field in the secret
       remoteRef:
-      # 1password-entry-name and property
-      key: "demo autofs client/userData"
+        # 1password-entry-name and property
+        key: "demo autofs client/userData"
   ```
   {{< /collapsable >}}
 
