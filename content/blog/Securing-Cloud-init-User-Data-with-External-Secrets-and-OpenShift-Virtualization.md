@@ -20,6 +20,8 @@ Storing Virtual Machines as Kubernetes resources in git for automated deployment
 
 <!--more-->
 
+_Updated 2026-07 for OpenShift 4.22 and [ESO for OpenShift][16] 1.2.0_
+
 # Securing Cloud-init User Data
 
 As described in [this post][1] the cloud-init `userData` script for a [OpenShift Virtualization][15] virtual machine may contain privileged information like activation keys for your RHEL subscription.
@@ -39,28 +41,45 @@ Most of the data isn't sensitive, and keeping the scripts in git makes for easie
 
 # The External Secrets Operator
 
-The [External Secrets Operator][3] solves this issue for us by understanding how to look into secure vaults from "[providers][4]" like AWS Secrets Manager, HashiCorp Vault, or 1Password.
+The [External Secrets Operator][3] solves this issue for us by understanding how to look into secure vaults from "[providers][4]" like AWS Secrets Manager, HashiCorp Vault, or 1Password. The downstream [OpenShift ESO][17] provides a maintained release of ESO.
 
 Once your data is within a secure vault, you will create an `ExternalSecret` resource, which is safe to commit to git. When you apply these resources to the cluster, the ESO will use the information in the ExternalSecret to create a Kubernetes `Secret` resource, securely downloading, and inserting the sensitive data into it.
 
 ## 1Password Provider for ESO
 
-Using [1Password](https://1password.com) can be handy in a homelab or development environment, particularly if you already use 1Password to manage credentials in your browser. You Don't have to deploy any infrastructure or have an AWS account to use it. Be aware there is more than one 1Password integration and you should select the 1Password-SDK External Secrets Operator provider.
+Using [1Password](https://1password.com) can be handy in a homelab or development environment, particularly if you already use 1Password to manage credentials in your browser. You Don't have to deploy any infrastructure or have an AWS account to use it.
 
 ## Installing the External Secrets Operator
 
-Make sure to install a version of the External Secrets Operator (ESO) that supports the 1password-sdk provider, which was introduced in version 0.17. The older 1password-connect provider is now deprecated. If the operator has been updated to version 0.17 or later by the time you read this, you may be able to use the operator directly instead of installing via the Helm chart.
+{{< figure src="/images/securing-cloud-init-1password-op.png" link="/images/securing-cloud-init-1password-op.png"  caption="External Secret Operator for OpenShift" width="25%" class="pull-right">}}
 
-Install latest upstream ESO using Helm.
+- In the OpenShift console, navigate to _Ecosystem -> Software Catalog_.
 
-```bash
-$ helm repo add external-secrets https://charts.external-secrets.io
+- Find the "External Secrets Operator for Red Hat OpenShift" operator.
 
-$ oc new-project external-secrets
+- Install it using the default settings.
 
-$ helm install external-secrets \
-   external-secrets/external-secrets \
-   -n external-secrets
+{{< clearfix >}}
+
+## Enabling the External Secrets Operator
+
+Use the UI or create an `ExternalSecretsConfig` to enable the operator and cause its operands to be deployed like this.
+
+```yaml {{linenos=inline}}
+apiVersion: operator.openshift.io/v1alpha1
+kind: ExternalSecretsConfig
+metadata:
+  labels:
+    app: external-secrets-operator
+    app.kubernetes.io/name: cluster
+  name: cluster
+spec:
+  controllerConfig:
+    networkPolicies:
+    - componentName: ExternalSecretsCoreController
+      egress:
+      - {}
+      name: allow-external-secrets-egress
 ```
 
 # Configuring 1Password
@@ -84,6 +103,7 @@ $ TOKEN=$(
     op service-account create external-secrets-operator \
       --expires-in 90d \
       --vault eso:read_items,write_items \
+      --raw \
     )
 ```
 
@@ -147,11 +167,11 @@ done
 >     op read "op://${vault}/demo autofs ${vm}/userData" \
 >         --out-file=${vm}/base/scripts/userData
 > done
-> 
+>
 > # make any needed changes
 > vi {client,ldap,nfs}/base/scripts/userData
-> 
-> # upload changes to 1Password 
+>
+> # upload changes to 1Password
 > for vm in client ldap nfs; do
 >   op item edit \
 >     --vault "$vault" \
@@ -340,6 +360,8 @@ By leveraging the [External Secrets Operator][3] and [Kustomize][6] we _safely_ 
 * [1Password Create Item Docs][7]
 * [Kustomize][6]
 * [OpenShift Virtualization][15]
+* [`external-secrets-operator` for OpenShift][16] - Github
+* [`external-secrets-operator` for OpenShift][17] - Docs
 
 <!-- "/blog/Deploying-LDAP-AutoFS-with-OpenShift-Virtualization.md" -->
 [1]: {{< ref "/coming-soon.md" >}}  "Deploying-LDAP-AutoFS-with-OpenShift-Virtualization"
@@ -357,3 +379,5 @@ By leveraging the [External Secrets Operator][3] and [Kustomize][6] we _safely_ 
 [13]: <https://github.com/dlbewley/demo-autofs/blob/main/nfs/base/externalsecret.yaml> "NFS VM ExternalSecret"
 [14]: <https://github.com/dlbewley/demo-autofs/blob/main/client/base/kustomization.yaml> "Client VM Kustomization"
 [15]: <https://www.redhat.com/en/technologies/cloud-computing/openshift/virtualization> "OpenShift Virtualization"
+[16]: <https://github.com/openshift/external-secrets-operator/blob/main/README.md> "external-secrets-operator for OpenShift"
+[17]: <https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/security_and_compliance/external-secrets-operator-for-red-hat-openshift> "external-secrets-operator for OpenShift Docs"
