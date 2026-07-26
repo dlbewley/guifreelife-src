@@ -45,10 +45,6 @@ The [External Secrets Operator][3] solves this issue for us by understanding how
 
 Once your data is within a secure vault, you will create an `ExternalSecret` resource, which is safe to commit to git. When you apply these resources to the cluster, the ESO will use the information in the ExternalSecret to create a Kubernetes `Secret` resource, securely downloading, and inserting the sensitive data into it.
 
-## 1Password Provider for ESO
-
-Using [1Password](https://1password.com) can be handy in a homelab or development environment, particularly if you already use 1Password to manage credentials in your browser. You Don't have to deploy any infrastructure or have an AWS account to use it.
-
 ## Installing the External Secrets Operator
 
 {{< figure src="/images/securing-cloud-init-1password-op.png" link="/images/securing-cloud-init-1password-op.png"  caption="External Secret Operator for OpenShift" width="25%" class="pull-right">}}
@@ -81,8 +77,11 @@ spec:
       - {}
       name: allow-external-secrets-egress
 ```
+# 1Password Provider for External Secrets
 
-# Configuring 1Password
+Using [1Password](https://1password.com) can be handy in a homelab or development environment, particularly if you already use 1Password to manage credentials in your browser. You Don't have to deploy any infrastructure or have an AWS account to use it.
+
+## Configuring 1Password
 
 Use the command line to setup 1Password. Grab the 1Password CLI command `op` from https://developer.1password.com/ or use `brew`.
 
