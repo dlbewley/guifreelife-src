@@ -95,7 +95,7 @@ Create a dedicated vault in 1Password for use by the ESO, so there is no chance 
 $ op vault create eso --icon gears
 ```
 
-Create a token to authenticate the ESO to access 1Password. Note that 90 days is the max lifetime allowed by 1Password.
+Create a token to authenticate the ESO service account to access 1Password. Note that 90 days is the max lifetime allowed by 1Password.
 
 ```bash
 $ TOKEN=$(
@@ -106,12 +106,22 @@ $ TOKEN=$(
     )
 ```
 
-Place this token in a secret called _onepassword-connect-token_ which allows ESO to authenticate to 1Password.
+Store the token in 1Password so it can be referenced later. Place it in a more privileged vault not visible to ESO. This is only for you to selectively access.
 
- ```bash
+```bash
+$ op item create \
+    --vault development \
+    --category password \
+    --title eso-service-account \
+    "token[password]=$TOKEN"
+```
+
+Place this token in a secret called _onepassword-connect-token_ which will be referenced later in a `ClusterSecretStore` to instruct ESO how to access 1Password.
+
+```bash
 $ oc create secret generic onepassword-connect-token \
-  --from-literal=token="$TOKEN" \
-  -n external-secrets
+  --namespace external-secrets \
+  --from-literal=token="$(op read 'op://development/eso-service-account/token')"
 ```
 
 > ⭐ **Pro Tip:**
@@ -126,6 +136,16 @@ $ oc create secret generic onepassword-connect-token \
 >  wretasduq3rkip7wn37njozghi    demo autofs nfs                  eso              22 hours ago
 >  euaujb4izjftqineetzaer3x7i    demo autofs client               eso              5 days ago
 >  ```
+
+### Refreshing the token
+
+After 90 days when the 1Password token has been generated and stored in 1Password as above, the secret can be updated like this
+
+```bash
+oc set data secret onepassword-connect-token \
+  --namespace external-secrets \
+  --from-literal=token="$(op read 'op://development/eso-service-account/token')"
+```
 
 ## Uploading userData to the Vault
 
