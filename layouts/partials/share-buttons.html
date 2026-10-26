@@ -1,0 +1,19 @@
+{{/* Site-level override of the theme's share-buttons.html partial. */}}
+{{ $url := .Permalink }}
+{{ $title := .Title | default .Site.Title }}
+<style>
+  #footer .share-buttons a { color: inherit; margin-right: 8px; }
+  #footer .share-buttons a:hover,
+  #footer .share-buttons a:focus { color: var(--primary-accent); text-decoration: none; }
+</style>
+<h4>Share</h4>
+<div class="share-buttons">
+  <a href="https://x.com/intent/post?{{ querify "url" $url "text" $title | safeURL }}" target="_blank" rel="noopener noreferrer" title="Share this on X (Twitter)" aria-label="Share this on X (Twitter)"><i class="fab fa-2x fa-twitter" aria-hidden="true"></i></a>
+  <a href="https://www.facebook.com/sharer/sharer.php?{{ querify "u" $url | safeURL }}" target="_blank" rel="noopener noreferrer" title="Share this on Facebook" aria-label="Share this on Facebook"><i class="fab fa-2x fa-facebook" aria-hidden="true"></i></a>
+  <a href="https://www.linkedin.com/sharing/share-offsite/?{{ querify "url" $url | safeURL }}" target="_blank" rel="noopener noreferrer" title="Share this on LinkedIn" aria-label="Share this on LinkedIn"><i class="fab fa-2x fa-linkedin" aria-hidden="true"></i></a>
+  {{/* Mail clients show "+" literally, so encode spaces as %20 instead. */}}
+  <a href="mailto:?{{ querify "subject" $title "body" $url | replaceRE `\+` "%20" | safeURL }}" title="Share this through email" aria-label="Share this through email"><i class="fa fa-2x fa-envelope" aria-hidden="true"></i></a>
+  {{ with .Params.image }}
+  <a href="https://pinterest.com/pin/create/button/?{{ querify "url" $url "media" (. | absURL) "description" $title | safeURL }}" target="_blank" rel="noopener noreferrer" title="Share this on Pinterest" aria-label="Share this on Pinterest"><i class="fab fa-2x fa-pinterest" aria-hidden="true"></i></a>
+  {{ end }}
+</div>
