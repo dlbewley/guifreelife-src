@@ -1,5 +1,5 @@
 # misc info https://www.ii.com/hugo-tips-fragments/#_embed_twitter_list
-baseurl = "http://guifreelife.com"
+baseurl = "https://guifreelife.com"
 title = "GUI Free Life"
 themesDir = "themes"
 locale = "en-us"
@@ -195,7 +195,7 @@ pagerSize = 10
     #icon = "far fa-file-alt"
     #title = "Do you want to see more?"
     #subtitle = "We have prepared for you more than 40 different HTML pages, including 5 variations of homepage."
-    link_url = "http://guifreelife.com"
+    link_url = "https://guifreelife.com"
     link_text = "GUI Free Life"
 
 
