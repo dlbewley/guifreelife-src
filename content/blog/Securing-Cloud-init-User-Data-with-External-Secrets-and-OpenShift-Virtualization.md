@@ -139,10 +139,29 @@ $ oc create secret generic onepassword-connect-token \
 
 ### Refreshing the token
 
-After 90 days when the 1Password token has been generated and stored in 1Password as above, the secret can be updated like this
+The service account token expires after 90 days, you can rotate the token in the [1Password developer console][18] or create a new service account with the same name on the CLI. There's no command to renew it.
+
+Create a "new" service account with the same name and access as before.
 
 ```bash
-oc set data secret onepassword-connect-token \
+$ TOKEN=$(
+    op service-account create external-secrets-operator \
+      --expires-in 90d \
+      --vault eso:read_items,write_items \
+      --raw \
+    )
+```
+
+Update your copy of the token in 1Password. Use `op item edit` rather than `op item create` so you don't end up with a duplicate item.
+
+```bash
+$ op item edit --vault development eso-service-account "token[password]=$TOKEN"
+```
+
+Update the value in the OpenShift secret.
+
+```bash
+$ oc set data secret onepassword-connect-token \
   --namespace external-secrets \
   --from-literal=token="$(op read 'op://development/eso-service-account/token')"
 ```
@@ -382,6 +401,7 @@ By leveraging the [External Secrets Operator][3] and [Kustomize][6] we _safely_ 
 * [OpenShift Virtualization][15]
 * [`external-secrets-operator` for OpenShift][16] - Github
 * [`external-secrets-operator` for OpenShift][17] - Docs
+* [1Password developer console][18]
 
 <!-- "/blog/Deploying-LDAP-AutoFS-with-OpenShift-Virtualization.md" -->
 [1]: {{< ref "/coming-soon.md" >}}  "Deploying-LDAP-AutoFS-with-OpenShift-Virtualization"
@@ -401,3 +421,4 @@ By leveraging the [External Secrets Operator][3] and [Kustomize][6] we _safely_ 
 [15]: <https://www.redhat.com/en/technologies/cloud-computing/openshift/virtualization> "OpenShift Virtualization"
 [16]: <https://github.com/openshift/external-secrets-operator/blob/main/README.md> "external-secrets-operator for OpenShift"
 [17]: <https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/security_and_compliance/external-secrets-operator-for-red-hat-openshift> "external-secrets-operator for OpenShift Docs"
+[18]: <https://my.1password.com/developer-tools/active/service-accounts> "1Password Service Accounts"
