@@ -3,7 +3,8 @@ title: "OVN Recon 1.0: The Logical Side of OpenShift Networking"
 date: 2026-11-14
 layout: post
 draft: true
-banner: /images/ovn-recon.png
+#banner: /images/ovn-recon.png
+banner: /images/ovn-recon-1.0-banner-600.png
 asciinema: false
 mermaid: false
 tags:
@@ -14,15 +15,15 @@ tags:
 description: OVN Recon has grown from a single node's physical wiring diagram into an explorer for the whole cluster, with a logical OVN topology view, cluster-wide search, per-network pages, and findings that flag what looks broken.
 ---
 
-Back in February I [introduced OVN Recon][launch-post], an OpenShift Console plugin that draws how a node's interfaces, bridges, and networks connect. The roadmap in that post included a modest line: _"Finish adding another view to visualize OVN components like logical switches and routers."_
+Back in February I [introduced OVN Recon][launch-post], an OpenShift Console plugin that draws how a node's interfaces, bridges, and networks connect. The roadmap in that post included : _"Finish adding another view to visualize OVN components like logical switches and routers."_
 
-That view is finished, and it brought a lot of friends. 13 releases and more than 300 commits later, [OVN Recon][ovn-recon] v1.0.7 covers the logical side of the network as well as the physical, for every node in the cluster, from one page.
+That view is now available, and it brought a lot of friends. [OVN Recon][ovn-recon] v1.0.7 covers the logical side of the network as well as the physical, for every node in the cluster, from one searchable page.
 
 <!--more-->
 
 # What's New
 
-> 💡 **OVN Recon can now answer questions like:**
+> ⭐  **OVN Recon can now answer questions like:**
 >
 > - What did OVN-Kubernetes actually build for this UDN?
 > - Where is this IP address, and who owns it?
@@ -30,21 +31,21 @@ That view is finished, and it brought a lot of friends. 13 releases and more tha
 > - Which NetworkPolicy created this ACL?
 > - Does anything look broken right now?
 
-The short version:
+**Highlights:**
 
-- **One explorer** 🌳 A tree of the cluster, its nodes, and its networks, with tabs for whatever you select.
-- **Logical topology** 🪜 The OVN switches and routers behind every network, per node or cluster-wide.
-- **Ports, Policy, and Services** 📋 The OVN northbound database as sortable tables, tied back to Kubernetes owners.
+- **Tree view** Navigate the cluster, its nodes, and its networks, with tabs for whatever you select.
+- **Physical topology** Redesigned and improved to include deeper visibility into EVPN, VXLAN, SR-IOV, bonds, LLDP, and kernel routes.
+- **Logical topology** The OVN switches and routers behind every network, per node or cluster-wide.
+- **Ports, Policy, and Services** The OVN northbound database as sortable tables, tied back to Kubernetes owners.
+- **Network pages** One page per CUDN, UDN, and NAD showing where it is wired.
 - **Find in cluster** 🔎 Search an IP, CIDR, MAC, or name across every node.
-- **Network pages** 🗺️ One page per CUDN, UDN, and NAD showing where it is wired.
 - **Findings** ⚠️ Rules that flag what looks broken, with evidence and a remedy.
-- **A deeper physical view** 🔌 EVPN, VXLAN, SR-IOV, bonds, LLDP, and kernel routes.
 
 # One Explorer for Everything
 
 In February, OVN Recon was a single graph with a node dropdown above it.
 
-{{< collapsable prompt="🕰️ **Flashback:** OVN Recon in February" collapse=true >}}
+{{< collapsable prompt="📺 **Screenshot:** OVN Recon in February" collapse=true >}}
 {{< figure
   src="/images/ovn-recon-ss1.png"
   width="100%"
@@ -53,6 +54,8 @@ In February, OVN Recon was a single graph with a node dropdown above it.
   attr="OVN Recon at launch, February 2026"
 >}}
 {{< /collapsable >}}
+
+&nbsp;
 
 Now _Networking → OVN Recon_ opens an explorer. On the left is a tree of the cluster, its nodes, and its networks. On the right are the views of whatever you selected, as tabs.
 
@@ -68,7 +71,7 @@ Now _Networking → OVN Recon_ opens an explorer. On the left is a tree of the c
 - **A node** has Physical topology, Logical topology, Routes, and Findings. The node name in the header is a switcher, so you can hop to another node and keep your tab.
 - **A network** shows its spec, its findings, and where it is placed.
 
-The tree can be resized or collapsed to a rail, and it remembers how you left it. Every view has its own URL, and selecting an object adds it to that URL, so you can paste a link to _exactly_ the gateway router you are staring at into a chat with a coworker.
+The tree can be resized or collapsed to a rail, and it remembers how you left it. Every view has its own URL, and selecting an object adds it to that URL, so you can paste a link to _exactly_ the resource you are exploring.
 
 # The Logical Topology
 
@@ -76,7 +79,7 @@ The tree can be resized or collapsed to a rail, and it remembers how you left it
 
 The physical view shows what [NMState][nmstate] reports: the things you configure on a node. The logical view shows what [OVN-Kubernetes][ovn-k] builds in response inside the OVN northbound database: logical switches, routers, and the ports that join them.
 
-That second half used to require `oc rsh` into an `ovnkube-node` pod and a fair amount of `ovn-nbctl` squinting. I wrote [a whole post][ovn-inspection] about doing it by hand.
+That second half used to require `oc rsh` into an `ovnkube-node` pod and a fair amount of `ovn-nbctl` squinting. I wrote [a post][ovn-inspection] about doing it by hand.
 
 {{< figure
   src="/images/ovn-recon-v1-logical-cluster.jpg"
@@ -85,6 +88,18 @@ That second half used to require `oc rsh` into an `ovnkube-node` pod and a fair 
   attrlink=""
   attr="Cluster logical topology: the default network and five user defined networks side by side"
 >}}
+
+{{< collapsable prompt="📺 **Screenshot:** A 3 node default cluster network" collapse=true >}}
+{{< figure
+  src="/images/ovn-recon-v1-3-node-logical.png"
+  width="50%"
+  link="/images/ovn-recon-v1-3-node-logical.png"
+  attrlink=""
+  attr="Cluster logical topology: the default network on 3 node cluster"
+>}}
+{{< /collapsable >}}
+
+&nbsp;
 
 The layout is a ladder that reads the same way every time:
 
@@ -95,7 +110,7 @@ This makes the differences between topologies obvious at a glance. In the screen
 
 ## Zones
 
-Modern OVN-Kubernetes runs in interconnect mode, where every node hosts its own northbound database called a zone. So there are two flavors of the logical view:
+Modern OVN-Kubernetes runs in [interconnect mode][ovn-k-arch], where every node hosts its own northbound database called a [zone][ovn-k-topology]. That zone is one OVN deployment, the same idea as upstream [OVN Interconnection][ovn-ic]. So there are two flavors of the logical view:
 
 - **Per node** renders exactly one zone, which is what that node's `ovn-controller` is working from.
 - **Cluster** merges every zone. Things that exist once per node, like gateway routers, collapse into a chip like "10 × Gateway router" that expands when clicked.
@@ -124,7 +139,7 @@ Every switch and router also has a full-width page with tabs for its **Ports**, 
   attr="ACLs on a node switch, each attributed to the Kubernetes object that created it"
 >}}
 
-The Policy tab is my favorite. OVN ACLs are not known for their readability, but each one here is credited to the Kubernetes object that caused it: a `NetworkPolicy`, a namespace default, a multicast rule. "Why is this traffic dropped?" gets a lot closer to "because of _that_ policy, right there."
+OVN ACLs are not known for their readability, but each one here is credited to the Kubernetes object that caused it: a `NetworkPolicy`, a namespace default, a multicast rule. "Why is this traffic dropped?" gets a lot closer to "because of _that_ policy, right there."
 
 {{< collapsable prompt="📺 **Screenshot:** The Services tab" collapse=true >}}
 {{< figure
@@ -136,13 +151,15 @@ The Policy tab is my favorite. OVN ACLs are not known for their readability, but
 >}}
 {{< /collapsable >}}
 
+&nbsp;
+
 The Services tab does the same for OVN load balancers. It shows one row per `Service` with its VIPs and backends, and a filter for Services whose VIPs have no endpoints at all.
 
 ## Where Does the Data Come From?
 
 A small collector deployment reads the northbound tables from each node and caches the result. In February I described it as _"very much a work in progress, just skip it for now."_
 
-**You can stop skipping it.** The collector is now enabled by default. It serves from a disk cache so pages paint right away, it only probes when somebody is looking, and when it has a problem it says so in plain words like "Collector is not answering (HTTP 502)" instead of drawing an empty canvas.
+**You can stop skipping it.** The collector is now enabled by default. It currently serves from a JSON file on a disk cache, so pages paint right away. It only probes when somebody is looking.
 
 # Find Anything
 
@@ -157,8 +174,6 @@ There is a search box at the top of every view. Give it an IP address, a CIDR, a
 >}}
 
 It searches every node's OVN snapshot and `NodeNetworkState` together. Results are grouped by kind (pod and VM ports, router ports, NAT rules, Service VIPs, node interfaces, routes), and each one opens the right view with that object already selected. The tree marks which nodes and networks hold a match.
-
-"Who has 10.131.0.14?" used to be a scavenger hunt. Now it is one line.
 
 # One Page per Network
 
@@ -202,7 +217,7 @@ The original physical view did not sit still either.
   attr="An EVPN VXLAN device resolved to its VTEP and MAC-VRF"
 >}}
 
-- **EVPN and VXLAN** devices are drawn and linked to their VTEP and the network that uses them. In February I wrote that EVPN was coming "soon". It is here, and you can see it.
+- **EVPN and VXLAN** devices are drawn and linked to their VTEP and the network that uses them.
 - **VRFs** link to the network they serve.
 - **SR-IOV** virtual functions are drawn and tied to their physical function.
 - **Ethernet and bond drawers** show driver, link speed, MTU, PCI address, LLDP neighbors, and bonding mode. That is a few fewer trips through `oc debug node`.
@@ -214,7 +229,7 @@ The original physical view did not sit still either.
 
 OVN Recon also tries to be a better neighbor to the rest of the console.
 
-It links out to the page that owns each object, whichever plugin draws it. Nodes, networks, and Services get a **View traffic** link into [Network Observability][netobserv] when that is installed. Interfaces get a link to their details on the NMState page.
+It links out to the page that owns each object, whichever plugin draws it. Nodes, networks, and Services get a **View traffic** link into [Network Observability][netobserv] when that is installed. Interfaces get a link to their details on the [NMState][nmstate] page.
 
 It can also come to you. An optional **OVN Recon** tab and an **Open in OVN Recon** action can appear on the console's own Node, CUDN, UDN, and NAD pages.
 
@@ -240,6 +255,8 @@ oc patch ovnrecon ovn-recon --type=merge -p '{
 ```
 {{< /collapsable >}}
 
+Visibility of these tabs can be restricted by removing read privilegs to the `OvnRecon` resource.
+
 # Installing or Upgrading
 
 > :warning: **Still Experimental**
@@ -250,7 +267,7 @@ oc patch ovnrecon ovn-recon --type=merge -p '{
 
 > :information_source: **OpenShift 4.22 or later**
 >
-> OpenShift 4.22 changed the libraries the console shares with plugins, so OVN Recon v1.0 and later require OpenShift 4.22+. An existing install on 4.20 or 4.21 keeps running v0.3.7, the last of the 0.3 releases, and the new version waits as a Pending CSV until the cluster is upgraded.
+> OpenShift 4.22 changed the libraries the console shares with plugins, so OVN Recon v1.0 and later require OpenShift 4.22+.
 
 Installation is the same as [before][launch-post]. Import the `CatalogSource`, find "OVN Recon Operator" in the Software Catalog, install it, and create an `OvnRecon` instance.
 
@@ -268,7 +285,7 @@ spec:
   publisher: Dale Bewley
   updateStrategy:
     registryPoll:
-      interval: 1h
+      interval: 24h
 ```
 {{< /collapsable >}}
 
@@ -277,8 +294,6 @@ A few things got easier:
 - **An empty `OvnRecon` is a full install.** Plugin, collector, and cache are all on by default. The values the operator settled on are published in `status.effective`.
 - **Two catalog tags.** `:stable` has releases only. `:latest` adds pre-releases, for the brave.
 - **Multi-arch images** for amd64 and arm64.
-
-If you already have OVN Recon installed and a console tab open during the upgrade, reload the tab. A stale one may complain that it "Failed to load module".
 
 # Roadmap Report Card
 
@@ -313,7 +328,7 @@ It can now show what OVN built on top of that wiring, for every node and every n
 
 It is still built with AI coding agents. These days that is mostly [Claude Code][claude-code], with [Beads][beads] still tracking the work. It is still experimental, so keep it out of production.
 
-Give it a try and [let me know][issues] what you think!
+I'm building this for fun and educational puprposes. Give it a try and [let me know][issues] what you think!
 
 # References
 
@@ -323,6 +338,9 @@ Give it a try and [let me know][issues] what you think!
 - [OVN Recon Logical Visualization Guide][logical-guide]
 - [Open Virtual Networking Inspection with OpenShift][ovn-inspection]
 - [OVN-Kubernetes CNI][ovn-k]
+- [OVN-Kubernetes Architecture][ovn-k-arch]
+- [OVN-Kubernetes Network Topology][ovn-k-topology]
+- [OVN Interconnection][ovn-ic]
 - [NMState Operator][nmstate]
 - [Network Observability Operator][netobserv]
 - [User Defined Networks in OpenShift][udn-ocp]
@@ -330,13 +348,16 @@ Give it a try and [let me know][issues] what you think!
 - [Beads: A coding agent memory system][beads]
 - [Claude Code][claude-code]
 
-[launch-post]: /blog/2026/02/18/OVN-Recon-Making-OpenShift-Networking-Connections/ "OVN Recon: Making OpenShift Networking Connections"
+[launch-post]: {{< ref "/blog/OVN-Recon-Making-OpenShift-Networking-Connections.md" >}} "OVN Recon: Making OpenShift Networking Connections"
 [ovn-recon]: https://github.com/dlbewley/ovn-recon/ "OVN-Recon"
 [release]: https://github.com/dlbewley/ovn-recon/releases/tag/v1.0.7 "OVN Recon v1.0.7"
 [logical-guide]: https://github.com/dlbewley/ovn-recon/blob/main/readme-logical-visualization.md "Logical OVN Visualization"
 [issues]: https://github.com/dlbewley/ovn-recon/issues "OVN Recon Issues"
-[ovn-inspection]: /blog/2024/11/19/Open-Virtual-Network-Inspection-on-OpenShift/ "Open Virtual Networking Inspection with OpenShift"
+[ovn-inspection]: {{< ref "/blog/Open-Virtual-Network-Inspection-on-OpenShift.md" >}} "Open Virtual Networking Inspection with OpenShift"
 [ovn-k]: https://ovn-kubernetes.io/ "OVN-Kubernetes Documentation"
+[ovn-k-arch]: https://github.com/ovn-kubernetes/ovn-kubernetes/blob/master/docs/design/architecture.md "OVN-Kubernetes Architecture"
+[ovn-k-topology]: https://ovn-kubernetes.io/design/topology/ "OVN-Kubernetes Network Topology"
+[ovn-ic]: https://docs.ovn.org/en/latest/tutorials/ovn-interconnection.html "OVN Interconnection"
 [nmstate]: https://nmstate.io "NMState Operator"
 [netobserv]: https://github.com/netobserv/network-observability-operator "Network Observability Operator"
 [udn-ocp]: https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/multiple_networks/primary-networks "User Defined Networks in OpenShift"
