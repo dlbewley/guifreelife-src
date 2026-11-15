@@ -2,8 +2,6 @@
 title: "OVN Recon 1.0: The Logical Side of OpenShift Networking"
 date: 2026-11-15
 layout: post
-draft: true
-#banner: /images/ovn-recon.png
 banner: /images/ovn-recon-1.0-banner-600.png
 asciinema: false
 mermaid: false
