@@ -18,6 +18,7 @@ The OpenShift networking stack, including the [OVN-Kubernetes][ovn-k] CNI, [Clus
 [OVN Recon][ovn-recon] is an OpenShift Console plugin built to make the connections that help develop your mental model for understanding OpenShift networking.
 
 <!--more-->
+⭐ **Update 2026-11:** _See [OVN Recon 1.0 blog post][ovnrecon-1]_
 
 # The Problem
 
@@ -194,3 +195,4 @@ I'll write some more detailed networking posts in the future. In the meantime, h
 [cno]: https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/networking_operators/cluster-network-operator "OpenShift Cluster Network Operator"
 [frr]: https://github.com/metallb/frr-k8s "FRR-K8s"
 [catalog]: https://github.com/dlbewley/ovn-recon/blob/main/manifests/catalogsource.yaml "Bewley-Operators CatalogSource"
+[ovnrecon-1]: {{< ref "/blog/OVN-Recon-1.0-The-Logical-Side-of-OpenShift-Networking.md" >}} "OVN Recon 1.0"
